@@ -116,11 +116,9 @@ class AcousticRatingCalculator {
     this.externalAcousticRating = externalAcousticRating;
   }
 
-  // calculate(): OutputComponent[] {
-  //   let outputComponents: OutputComponent[];
-  //
-  //   return outputComponents;
-  // }
+  calculate(): string {
+    return "tests are working";
+  }
   //
   // calculateAirborneAcousticRatingCReq() {}
   //
