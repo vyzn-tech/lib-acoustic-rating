@@ -17,7 +17,7 @@ const INDOOR_MAP = {
     NOISE_EXPOSURE_HIGH: 62,
     NOISE_EXPOSURE_VERY_HIGH: 67,
   },
-};
+}
 
 const OUTDOOR_MAP = {
   NOISE_SENSITIVITY_LOW: {
@@ -38,4 +38,4 @@ const OUTDOOR_MAP = {
     NOISE_EXPOSURE_HIGH: 62,
     NOISE_EXPOSURE_VERY_HIGH: 67,
   },
-};
+}

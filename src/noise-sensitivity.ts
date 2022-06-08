@@ -1,7 +1,7 @@
-const NOISE_SENSITIVITY_NONE = null;
-const NOISE_SENSITIVITY_LOW = 1;
-const NOISE_SENSITIVITY_MODERATE = 2;
-const NOISE_SENSITIVITY_HIGH = 3;
+const NOISE_SENSITIVITY_NONE = null
+const NOISE_SENSITIVITY_LOW = 1
+const NOISE_SENSITIVITY_MODERATE = 2
+const NOISE_SENSITIVITY_HIGH = 3
 
 const NOISE_SENSITIVITY_MAP_SIA181_2020 = {
   Abstellraum: NOISE_SENSITIVITY_NONE,
@@ -39,24 +39,24 @@ const NOISE_SENSITIVITY_MAP_SIA181_2020 = {
   "Therapieräume mit hohem Ruhebedarf": NOISE_SENSITIVITY_HIGH,
   Lesezimmer: NOISE_SENSITIVITY_HIGH,
   Studierzimmer: NOISE_SENSITIVITY_HIGH,
-};
+}
 
 const NOISE_SENSITIVITY_MAP_SIA181_2006 = {
   Kantine: NOISE_SENSITIVITY_LOW,
   Verkauf: NOISE_SENSITIVITY_LOW,
   Spitalzimmer: NOISE_SENSITIVITY_HIGH,
-};
+}
 
 function getNoiseSensitivity(occupancy: string, custom_mapping: {} = {}) {
   const map = {
     ...NOISE_SENSITIVITY_MAP_SIA181_2006,
     ...NOISE_SENSITIVITY_MAP_SIA181_2020,
     ...custom_mapping,
-  };
+  }
 
   for (const [key, value] of Object.entries(map)) {
     if (key === occupancy) {
-      return value;
+      return value
     }
   }
 }

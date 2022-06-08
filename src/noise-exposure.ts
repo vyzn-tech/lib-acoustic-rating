@@ -1,7 +1,7 @@
-const NOISE_EXPOSURE_LOW = 1;
-const NOISE_EXPOSURE_MODERATE = 2;
-const NOISE_EXPOSURE_HIGH = 3;
-const NOISE_EXPOSURE_VERY_HIGH = 4;
+const NOISE_EXPOSURE_LOW = 1
+const NOISE_EXPOSURE_MODERATE = 2
+const NOISE_EXPOSURE_HIGH = 3
+const NOISE_EXPOSURE_VERY_HIGH = 4
 
 const NOISE_EXPOSURE_MAP_SIA181_2020_AIRBORNE = {
   Kellerraum: NOISE_EXPOSURE_LOW,
@@ -51,12 +51,12 @@ const NOISE_EXPOSURE_MAP_SIA181_2020_AIRBORNE = {
   Werkstatt: NOISE_EXPOSURE_VERY_HIGH,
   Musikübungsraum: NOISE_EXPOSURE_VERY_HIGH,
   Sporthalle: NOISE_EXPOSURE_VERY_HIGH,
-};
+}
 
 const NOISE_EXPOSURE_MAP_SIA181_2006_AIRBORNE = {
   Konferenzraum: NOISE_EXPOSURE_MODERATE,
   Versammlungsraum: NOISE_EXPOSURE_HIGH,
-};
+}
 
 const NOISE_EXPOSURE_MAP_SIA181_2020_FOOTSTEP = {
   Kellerraum: NOISE_EXPOSURE_LOW,
@@ -90,22 +90,22 @@ const NOISE_EXPOSURE_MAP_SIA181_2020_FOOTSTEP = {
   Werkstatt: NOISE_EXPOSURE_HIGH,
   Musikübungsraum: NOISE_EXPOSURE_HIGH,
   Sporthalle: NOISE_EXPOSURE_HIGH,
-};
+}
 
 const NOISE_EXPOSURE_MAP_SIA181_2006_FOOTSTEP = {
   Versammlungsraum: NOISE_EXPOSURE_HIGH,
-};
+}
 
 function getAirborneNoiseExposure(occupancy: string, custom_mapping: {} = {}) {
   const map = {
     ...NOISE_EXPOSURE_MAP_SIA181_2006_AIRBORNE,
     ...NOISE_EXPOSURE_MAP_SIA181_2020_AIRBORNE,
     ...custom_mapping,
-  };
+  }
 
   for (const [key, value] of Object.entries(map)) {
     if (key === occupancy) {
-      return value;
+      return value
     }
   }
 }
@@ -115,11 +115,11 @@ function getFootstepNoiseExposure(occupancy: string, custom_mapping: {} = {}) {
     ...NOISE_EXPOSURE_MAP_SIA181_2006_FOOTSTEP,
     ...NOISE_EXPOSURE_MAP_SIA181_2020_FOOTSTEP,
     ...custom_mapping,
-  };
+  }
 
   for (const [key, value] of Object.entries(map)) {
     if (key === occupancy) {
-      return value;
+      return value
     }
   }
 }

@@ -7,20 +7,20 @@ type CelestialDirection =
   | "S"
   | "SW"
   | "W"
-  | "NW";
-type Status = "new" | "temporary" | "existing" | "demolish";
-type Name = "Wand" | "Decke" | "Flachdach" | "Steildach" | "Bodenplatte";
-type AcousticRatingLevelReq = "Mindestanforderungen" | "Erhoehte Anforderungen";
+  | "NW"
+type Status = "new" | "temporary" | "existing" | "demolish"
+type Name = "Wand" | "Decke" | "Flachdach" | "Steildach" | "Bodenplatte"
+type AcousticRatingLevelReq = "Mindestanforderungen" | "Erhoehte Anforderungen"
 
-const PREDEFINED_TYPE_FLOOR = "FLOOR";
-const PREDEFINED_TYPE_BASESLAB = "BASESLAB";
-const PREDEFINED_TYPE_ROOF = "ROOF";
+const PREDEFINED_TYPE_FLOOR = "FLOOR"
+const PREDEFINED_TYPE_BASESLAB = "BASESLAB"
+const PREDEFINED_TYPE_ROOF = "ROOF"
 const ALL_PREDEFINED_TYPES = <const>[
   PREDEFINED_TYPE_FLOOR,
   PREDEFINED_TYPE_BASESLAB,
   PREDEFINED_TYPE_ROOF,
-];
-type PredefinedType = typeof ALL_PREDEFINED_TYPES[number];
+]
+type PredefinedType = typeof ALL_PREDEFINED_TYPES[number]
 
 type OccupancyType =
   | "Werkstatt"
@@ -45,26 +45,26 @@ type OccupancyType =
   | "Ruheräume"
   | "Therapieraum"
   | "Lesezimmer"
-  | "Studierzimmer";
+  | "Studierzimmer"
 
 abstract class IFCItem {
-  id: string;
-  parentIds: string[];
+  id: string
+  parentIds: string[]
 }
 class IFCBuilding extends IFCItem {
-  status: Status;
-  name: Name;
+  status: Status
+  name: Name
 }
 
 class IFCComponent extends IFCItem {
-  isExternal: boolean;
-  celestialDirection: CelestialDirection;
+  isExternal: boolean
+  celestialDirection: CelestialDirection
 }
 
 class IFCWall extends IFCComponent {}
 
 class IFCSlab extends IFCWall {
-  predefinedType: PredefinedType;
+  predefinedType: PredefinedType
 }
 
 class IFCDoor extends IFCWall {}
@@ -72,52 +72,52 @@ class IFCDoor extends IFCWall {}
 class IFCRoof extends IFCWall {}
 
 class IFCSpace extends IFCItem {
-  occupancyType: OccupancyType;
-  centerOfGravityZ: number;
+  occupancyType: OccupancyType
+  centerOfGravityZ: number
 }
 
 class IFCZone extends IFCBuilding {
-  acousticRatingLevelReq: AcousticRatingLevelReq;
+  acousticRatingLevelReq: AcousticRatingLevelReq
 }
 
 class OutputComponent {
-  id: string;
-  airborneAcousticRatingCReq: number;
-  airborneAcousticRatingCtrReq: number;
-  footstepAcousticRatingCReq: number;
-  footstepAcousticRatingCtrReq: number;
+  id: string
+  airborneAcousticRatingCReq: number
+  airborneAcousticRatingCtrReq: number
+  footstepAcousticRatingCReq: number
+  footstepAcousticRatingCtrReq: number
 }
 
 class ExternalAcousticRatingItem {
-  day: number;
-  night: number;
+  day: number
+  night: number
 }
 
 class ExternalAcousticRating {
-  N: ExternalAcousticRatingItem;
-  NE: ExternalAcousticRatingItem;
-  E: ExternalAcousticRatingItem;
-  SE: ExternalAcousticRatingItem;
-  S: ExternalAcousticRatingItem;
-  SW: ExternalAcousticRatingItem;
-  W: ExternalAcousticRatingItem;
-  NW: ExternalAcousticRatingItem;
+  N: ExternalAcousticRatingItem
+  NE: ExternalAcousticRatingItem
+  E: ExternalAcousticRatingItem
+  SE: ExternalAcousticRatingItem
+  S: ExternalAcousticRatingItem
+  SW: ExternalAcousticRatingItem
+  W: ExternalAcousticRatingItem
+  NW: ExternalAcousticRatingItem
 }
 
 class AcousticRatingCalculator {
-  ifcItems: IFCItem[];
-  externalAcousticRating: ExternalAcousticRating;
+  ifcItems: IFCItem[]
+  externalAcousticRating: ExternalAcousticRating
 
   constructor(
     ifcItems: IFCItem[],
     externalAcousticRating: ExternalAcousticRating
   ) {
-    this.ifcItems = ifcItems;
-    this.externalAcousticRating = externalAcousticRating;
+    this.ifcItems = ifcItems
+    this.externalAcousticRating = externalAcousticRating
   }
 
   calculate(): string {
-    return "tests are working";
+    return "tests are working"
   }
   //
   // calculateAirborneAcousticRatingCReq() {}
@@ -129,8 +129,8 @@ class AcousticRatingCalculator {
   // calculateFootstepAcousticRatingCtrReq() {}
 }
 
-// const acousticRatingCalculator = new AcousticRatingCalculator();
-// const output = acousticRatingCalculator.calculate();
+// const acousticRatingCalculator = new AcousticRatingCalculator()
+// const output = acousticRatingCalculator.calculate()
 
 export {
   AcousticRatingCalculator,
@@ -156,4 +156,4 @@ export {
   ALL_PREDEFINED_TYPES,
   PredefinedType,
   Status,
-};
+}
