@@ -19,12 +19,12 @@ const NOISE_SENSITIVITY_MAP_SIA181_2020 = {
   Handarbeitsraum: NOISE_SENSITIVITY_LOW,
   Kantine: NOISE_SENSITIVITY_LOW,
   Restaurant: NOISE_SENSITIVITY_LOW,
-  "Küche ohne Wohnanteil": NOISE_SENSITIVITY_LOW,
+  'Küche ohne Wohnanteil': NOISE_SENSITIVITY_LOW,
   Bad: NOISE_SENSITIVITY_LOW,
   Dusche: NOISE_SENSITIVITY_LOW,
   WC: NOISE_SENSITIVITY_LOW,
   Verkaufsraum: NOISE_SENSITIVITY_LOW,
-  "wohungsinterner Korridor": NOISE_SENSITIVITY_LOW,
+  'wohungsinterner Korridor': NOISE_SENSITIVITY_LOW,
   Warteraum: NOISE_SENSITIVITY_LOW,
 
   Wohnzimmer: NOISE_SENSITIVITY_MODERATE,
@@ -36,7 +36,7 @@ const NOISE_SENSITIVITY_MAP_SIA181_2020 = {
   Büroraum: NOISE_SENSITIVITY_MODERATE,
   Empfangsraum: NOISE_SENSITIVITY_MODERATE,
   Hotelzimmer: NOISE_SENSITIVITY_MODERATE,
-  "Therapieräume mit hohem Ruhebedarf": NOISE_SENSITIVITY_HIGH,
+  'Therapieräume mit hohem Ruhebedarf': NOISE_SENSITIVITY_HIGH,
   Lesezimmer: NOISE_SENSITIVITY_HIGH,
   Studierzimmer: NOISE_SENSITIVITY_HIGH,
 }
@@ -47,16 +47,40 @@ const NOISE_SENSITIVITY_MAP_SIA181_2006 = {
   Spitalzimmer: NOISE_SENSITIVITY_HIGH,
 }
 
-function getNoiseSensitivity(occupancy: string, custom_mapping: {} = {}) {
-  const map = {
-    ...NOISE_SENSITIVITY_MAP_SIA181_2006,
-    ...NOISE_SENSITIVITY_MAP_SIA181_2020,
-    ...custom_mapping,
-  }
+const NOISE_SENSITIVITY_MAP_SEESTRASSE = {
+  Terrasse: NOISE_SENSITIVITY_NONE,
+  Waschraum: NOISE_SENSITIVITY_NONE,
+  Einfahrt: NOISE_SENSITIVITY_NONE,
+  Keller: NOISE_SENSITIVITY_NONE,
+  Technik: NOISE_SENSITIVITY_NONE,
+  Tiefgarage: NOISE_SENSITIVITY_NONE,
+  Treppenhaus: NOISE_SENSITIVITY_NONE,
+  Gewerbe: NOISE_SENSITIVITY_LOW,
+  Bad: NOISE_SENSITIVITY_LOW,
+  Wohnen: NOISE_SENSITIVITY_MODERATE,
+  Schlafen: NOISE_SENSITIVITY_MODERATE,
+}
 
-  for (const [key, value] of Object.entries(map)) {
-    if (key === occupancy) {
-      return value
+class NoiseSensitivityUtil {
+  getNoiseSensitivity(occupancy: string) {
+    const map = {
+      ...NOISE_SENSITIVITY_MAP_SIA181_2006,
+      ...NOISE_SENSITIVITY_MAP_SIA181_2020,
+      ...NOISE_SENSITIVITY_MAP_SEESTRASSE,
+    }
+
+    for (const [key, value] of Object.entries(map)) {
+      if (key === occupancy) {
+        return value
+      }
     }
   }
+}
+
+export {
+  NOISE_SENSITIVITY_NONE,
+  NOISE_SENSITIVITY_LOW,
+  NOISE_SENSITIVITY_MODERATE,
+  NOISE_SENSITIVITY_HIGH,
+  NoiseSensitivityUtil,
 }
