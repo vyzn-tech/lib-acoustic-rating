@@ -65,16 +65,16 @@ type OccupancyType =
   | 'Balkon'
   | 'Attika'
 
-abstract class IFCItem {
+abstract class Item {
   id: string
   parentIds: string[]
 }
-class IFCBuilding extends IFCItem {
+class Building extends Item {
   name: Name
   status: Status
 }
 
-class IFCSurface extends IFCItem {
+class Surface extends Item {
   isExternal: boolean
   celestialDirection: CelestialDirection
   externalAcousticRatingDay: number
@@ -85,19 +85,19 @@ class IFCSurface extends IFCItem {
   decibelReceiver: number
 }
 
-class IFCWall extends IFCSurface {}
+class Wall extends Surface {}
 
-class IFCSlab extends IFCSurface {
+class Slab extends Surface {
   predefinedType: PredefinedType
 }
 
-class IFCDoor extends IFCSurface {}
+class Door extends Surface {}
 
-class IFCRoof extends IFCSurface {}
+class Roof extends Surface {}
 
-class IFCFlatRoof extends IFCSurface {}
+class FlatRoof extends Surface {}
 
-class IFCSpace extends IFCItem {
+class Space extends Item {
   occupancyType: OccupancyType
   noiseSensitivity: number
   airborneNoiseExposure: number
@@ -105,7 +105,7 @@ class IFCSpace extends IFCItem {
   centerOfGravityZ: number
 }
 
-class IFCZone extends IFCBuilding {
+class Zone extends Building {
   acousticRatingLevelReq: AcousticRatingLevelReq
 }
 
@@ -135,17 +135,17 @@ class ExternalAcousticRatingCollection {
 }
 
 class AcousticRatingCalculator {
-  ifcItems: IFCItem[]
+  items: Item[]
   externalAcousticRatings: ExternalAcousticRatingCollection
   noiseSensitivityUtil = new NoiseSensitivityUtil()
   noiseExposureUtil = new NoiseExposureUtil()
   airborneAcousticRatingUtil = new AirborneAcousticRatingUtil()
 
   constructor(
-    ifcItems: IFCItem[],
+    items: Item[],
     externalAcousticRatings: ExternalAcousticRatingCollection,
   ) {
-    this.ifcItems = ifcItems
+    this.items = items
     this.externalAcousticRatings = externalAcousticRatings
   }
 
@@ -158,16 +158,16 @@ class AcousticRatingCalculator {
   }
 
   setExternalAcousticRating() {
-    for (const ifcItem of this.ifcItems) {
+    for (const item of this.items) {
       if (
-        ifcItem instanceof IFCSurface &&
-        ifcItem.hasOwnProperty('celestialDirection')
+        item instanceof Surface &&
+        item.hasOwnProperty('celestialDirection')
       ) {
         for (const key in this.externalAcousticRatings) {
-          if (key === lowerCase(ifcItem.celestialDirection)) {
-            ifcItem.externalAcousticRatingDay =
+          if (key === lowerCase(item.celestialDirection)) {
+            item.externalAcousticRatingDay =
               this.externalAcousticRatings[key].day
-            ifcItem.externalAcousticRatingNight =
+            item.externalAcousticRatingNight =
               this.externalAcousticRatings[key].night
           }
         }
@@ -176,53 +176,52 @@ class AcousticRatingCalculator {
   }
 
   determineNoiseSensitivityAndExposure() {
-    for (const ifcItem of this.ifcItems) {
-      if (ifcItem instanceof IFCSpace) {
-        ifcItem.noiseSensitivity =
-          this.noiseSensitivityUtil.getNoiseSensitivity(ifcItem.occupancyType)
-        ifcItem.airborneNoiseExposure =
-          this.noiseExposureUtil.getAirborneNoiseExposure(ifcItem.occupancyType)
-        ifcItem.footstepNoiseExposure =
-          this.noiseExposureUtil.getFootstepNoiseExposure(ifcItem.occupancyType)
+    for (const item of this.items) {
+      if (item instanceof Space) {
+        item.noiseSensitivity = this.noiseSensitivityUtil.getNoiseSensitivity(
+          item.occupancyType,
+        )
+        item.airborneNoiseExposure =
+          this.noiseExposureUtil.getAirborneNoiseExposure(item.occupancyType)
+        item.footstepNoiseExposure =
+          this.noiseExposureUtil.getFootstepNoiseExposure(item.occupancyType)
       }
     }
   }
 
   determineAcousticRatingToExternalSources() {
-    for (const ifcItem of this.ifcItems) {
+    for (const item of this.items) {
       if (
-        ifcItem instanceof IFCWall ||
-        ifcItem instanceof IFCSlab ||
-        ifcItem instanceof IFCFlatRoof ||
-        ifcItem instanceof IFCRoof
+        item instanceof Wall ||
+        item instanceof Slab ||
+        item instanceof FlatRoof ||
+        item instanceof Roof
       ) {
-        const possibleParentRooms = this.filterForIFCSpace(this.ifcItems)
+        const possibleParentRooms = this.filterForSpace(this.items)
         const parentRoom = this.getFirstParentRoom(
-          ifcItem.parentIds,
+          item.parentIds,
           possibleParentRooms,
         )
-        const acousticRatingLevel = this.getAcousticRatingLevel(
-          ifcItem.parentIds,
-        )
+        const acousticRatingLevel = this.getAcousticRatingLevel(item.parentIds)
         // console.log("===================")
-        // console.log(ifcItem)
+        // console.log(item)
         // console.log(parentRoom)
         if (parentRoom.noiseSensitivity === NOISE_SENSITIVITY_NONE) {
-          ifcItem.decibelReceiver = 0
+          item.decibelReceiver = 0
           continue
         }
 
         let lrDay = this.airborneAcousticRatingUtil.getOutdoorAcousticRatingDay(
           parentRoom.noiseSensitivity,
-          ifcItem.externalAcousticRatingDay,
+          item.externalAcousticRatingDay,
         )
         let lrNight =
           this.airborneAcousticRatingUtil.getOutdoorAcousticRatingNight(
             parentRoom.noiseSensitivity,
-            ifcItem.externalAcousticRatingNight,
+            item.externalAcousticRatingNight,
           )
 
-        // console.log('id: ' + ifcItem.id)
+        // console.log('id: ' + item.id)
         // console.log('day: ' + lrDay)
         // console.log('night: ' + lrNight)
         if (acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
@@ -235,44 +234,39 @@ class AcousticRatingCalculator {
   }
 
   determineAcousticRatingToInternalSources() {
-    for (const ifcItem of this.ifcItems) {
+    for (const item of this.items) {
       if (
-        ifcItem instanceof IFCWall ||
-        ifcItem instanceof IFCSlab ||
-        ifcItem instanceof IFCFlatRoof ||
-        ifcItem instanceof IFCRoof
+        item instanceof Wall ||
+        item instanceof Slab ||
+        item instanceof FlatRoof ||
+        item instanceof Roof
       ) {
-        if (ifcItem.parentIds.length <= 1) {
-          ifcItem.decibelSender = 0
+        if (item.parentIds.length <= 1) {
+          item.decibelSender = 0
           continue
         }
-        const possibleParentRooms = this.filterForIFCSpaceAndIFCBuilding(
-          this.ifcItems,
-        )
-        const rooms = this.getParentRooms(
-          ifcItem.parentIds,
-          possibleParentRooms,
-        )
+        const possibleParentRooms = this.filterForSpaceAndBuilding(this.items)
+        const rooms = this.getParentRooms(item.parentIds, possibleParentRooms)
         console.log(rooms)
       }
     }
   }
 
-  filterForIFCZone(items: IFCItem[]): IFCZone[] {
-    const filteredItems: IFCZone[] = []
+  filterForZone(items: Item[]): Zone[] {
+    const filteredItems: Zone[] = []
     for (const item of items) {
-      if (item instanceof IFCZone) {
+      if (item instanceof Zone) {
         filteredItems.push(item)
       }
     }
     return filteredItems
   }
 
-  filterForIFCSpace(items: IFCItem[]): IFCSpace[] {
-    const filteredItems: IFCSpace[] = []
+  filterForSpace(items: Item[]): Space[] {
+    const filteredItems: Space[] = []
     for (const item of items) {
       if (
-        item instanceof IFCSpace &&
+        item instanceof Space &&
         item.occupancyType !== 'Balkon' &&
         item.occupancyType !== 'Attika'
       ) {
@@ -282,26 +276,24 @@ class AcousticRatingCalculator {
     return filteredItems
   }
 
-  filterForIFCSpaceAndIFCBuilding(
-    items: IFCItem[],
-  ): (IFCSpace | IFCBuilding)[] {
-    const filteredItems: (IFCSpace | IFCBuilding)[] = []
+  filterForSpaceAndBuilding(items: Item[]): (Space | Building)[] {
+    const filteredItems: (Space | Building)[] = []
     for (const item of items) {
-      if (item instanceof IFCSpace || item instanceof IFCBuilding) {
+      if (item instanceof Space || item instanceof Building) {
         filteredItems.push(item)
       }
     }
     return filteredItems
   }
 
-  getFirstParentRoom(parentIds: string[], items: IFCSpace[]): IFCSpace {
+  getFirstParentRoom(parentIds: string[], items: Space[]): Space {
     for (const parentId of parentIds) {
-      for (const ifcItem of items) {
-        if (ifcItem.id === parentId) {
-          return ifcItem
+      for (const item of items) {
+        if (item.id === parentId) {
+          return item
         }
-        if (ifcItem.parentIds && ifcItem.parentIds.length > 0) {
-          return this.getFirstParentRoom(ifcItem.parentIds, items)
+        if (item.parentIds && item.parentIds.length > 0) {
+          return this.getFirstParentRoom(item.parentIds, items)
         }
       }
     }
@@ -309,16 +301,16 @@ class AcousticRatingCalculator {
 
   getParentRooms(
     parentIds: string[],
-    items: (IFCSpace | IFCBuilding)[],
-  ): (IFCSpace | IFCBuilding)[] {
-    let rooms: (IFCSpace | IFCBuilding)[] = []
+    items: (Space | Building)[],
+  ): (Space | Building)[] {
+    let rooms: (Space | Building)[] = []
     for (const parentId of parentIds) {
-      for (const ifcItem of items) {
-        if (ifcItem.id === parentId) {
-          rooms.push(ifcItem)
+      for (const item of items) {
+        if (item.id === parentId) {
+          rooms.push(item)
         }
-        if (ifcItem.parentIds && ifcItem.parentIds.length > 0) {
-          rooms = rooms.concat(this.getParentRooms(ifcItem.parentIds, items))
+        if (item.parentIds && item.parentIds.length > 0) {
+          rooms = rooms.concat(this.getParentRooms(item.parentIds, items))
         }
       }
     }
@@ -326,14 +318,14 @@ class AcousticRatingCalculator {
   }
 
   getAcousticRatingLevel(parentIds: string[]): AcousticRatingLevelReq {
-    const filteredItems: IFCZone[] = this.filterForIFCZone(this.ifcItems)
+    const filteredItems: Zone[] = this.filterForZone(this.items)
     for (const parentId of parentIds) {
-      for (const ifcItem of filteredItems) {
-        if (ifcItem.id === parentId) {
-          return ifcItem.acousticRatingLevelReq
+      for (const item of filteredItems) {
+        if (item.id === parentId) {
+          return item.acousticRatingLevelReq
         }
-        if (ifcItem.parentIds && ifcItem.parentIds.length) {
-          return this.getAcousticRatingLevel(ifcItem.parentIds)
+        if (item.parentIds && item.parentIds.length) {
+          return this.getAcousticRatingLevel(item.parentIds)
         }
       }
     }
@@ -354,18 +346,18 @@ export {
   AcousticRatingCalculator,
   AcousticRatingLevelReq,
   CelestialDirection,
-  IFCSurface,
-  IFCItem,
+  Surface,
+  Item,
   ExternalAcousticRatingCollection,
   ExternalAcousticRating,
-  IFCBuilding,
-  IFCDoor,
-  IFCRoof,
-  IFCFlatRoof,
-  IFCSlab,
-  IFCSpace,
-  IFCWall,
-  IFCZone,
+  Building,
+  Door,
+  Roof,
+  FlatRoof,
+  Slab,
+  Space,
+  Wall,
+  Zone,
   Name,
   OccupancyType,
   OutputComponent,

@@ -1,16 +1,16 @@
 import {
   AcousticRatingCalculator,
   ExternalAcousticRating,
-  IFCItem,
+  Item,
 } from '../src/calculator'
 
 describe('test_test', () => {
   test('just a test for testing tests', () => {
-    const ifcItems: IFCItem[] = []
+    const items: Item[] = []
     const externalAcousticRating: ExternalAcousticRating =
       new ExternalAcousticRating()
     const calculator = new AcousticRatingCalculator(
-      ifcItems,
+      items,
       externalAcousticRating,
     )
 
