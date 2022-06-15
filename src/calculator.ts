@@ -1,9 +1,5 @@
 import { lowerCase } from 'lodash'
-import {
-  NOISE_SENSITIVITY_NONE,
-  NoiseSensitivity,
-  NoiseSensitivityUtil,
-} from './noise-sensitivity'
+import { NOISE_SENSITIVITY_NONE, NoiseSensitivity, NoiseSensitivityUtil } from './noise-sensitivity'
 import { NoiseExposure, NoiseExposureUtil } from './noise-exposure'
 import {
   AcousticRatingLevel,
@@ -12,27 +8,14 @@ import {
   AirborneAcousticRatingUtil,
 } from './airborn-acoustic-rating'
 
-type CelestialDirection =
-  | null
-  | 'N'
-  | 'NE'
-  | 'E'
-  | 'SE'
-  | 'S'
-  | 'SW'
-  | 'W'
-  | 'NW'
+type CelestialDirection = null | 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW'
 type Status = 'new' | 'temporary' | 'existing' | 'demolish'
 type Name = 'Wand' | 'Decke' | 'Flachdach' | 'Steildach' | 'Bodenplatte'
 
 const PREDEFINED_TYPE_FLOOR = 'FLOOR'
 const PREDEFINED_TYPE_BASESLAB = 'BASESLAB'
 const PREDEFINED_TYPE_ROOF = 'ROOF'
-const ALL_PREDEFINED_TYPES = <const>[
-  PREDEFINED_TYPE_FLOOR,
-  PREDEFINED_TYPE_BASESLAB,
-  PREDEFINED_TYPE_ROOF,
-]
+const ALL_PREDEFINED_TYPES = <const>[PREDEFINED_TYPE_FLOOR, PREDEFINED_TYPE_BASESLAB, PREDEFINED_TYPE_ROOF]
 type PredefinedType = typeof ALL_PREDEFINED_TYPES[number]
 
 type OccupancyType =
@@ -140,10 +123,7 @@ class AcousticRatingCalculator {
   noiseExposureUtil = new NoiseExposureUtil()
   airborneAcousticRatingUtil = new AirborneAcousticRatingUtil()
 
-  constructor(
-    items: Item[],
-    externalAcousticRatings: ExternalAcousticRatingCollection,
-  ) {
+  constructor(items: Item[], externalAcousticRatings: ExternalAcousticRatingCollection) {
     this.items = items
     this.externalAcousticRatings = externalAcousticRatings
   }
@@ -159,10 +139,7 @@ class AcousticRatingCalculator {
 
   setExternalAcousticRating() {
     for (const item of this.items) {
-      if (
-        item instanceof Surface &&
-        item.hasOwnProperty('celestialDirection')
-      ) {
+      if (item instanceof Surface && item.hasOwnProperty('celestialDirection')) {
         for (const key in this.externalAcousticRatings) {
           if (key === lowerCase(item.celestialDirection)) {
             item.externalAcousticRating = this.externalAcousticRatings[key]
@@ -175,13 +152,9 @@ class AcousticRatingCalculator {
   determineNoiseSensitivityAndExposure() {
     for (const item of this.items) {
       if (item instanceof Space || item instanceof NeighbourBuilding) {
-        item.noiseSensitivity = this.noiseSensitivityUtil.getNoiseSensitivity(
-          item.occupancyType,
-        )
-        item.airborneNoiseExposure =
-          this.noiseExposureUtil.getAirborneNoiseExposure(item.occupancyType)
-        item.footstepNoiseExposure =
-          this.noiseExposureUtil.getFootstepNoiseExposure(item.occupancyType)
+        item.noiseSensitivity = this.noiseSensitivityUtil.getNoiseSensitivity(item.occupancyType)
+        item.airborneNoiseExposure = this.noiseExposureUtil.getAirborneNoiseExposure(item.occupancyType)
+        item.footstepNoiseExposure = this.noiseExposureUtil.getFootstepNoiseExposure(item.occupancyType)
       }
     }
   }
@@ -189,10 +162,7 @@ class AcousticRatingCalculator {
   determineAcousticRatingToExternalSources() {
     function itemFilter(item: Item): item is Surface {
       return (
-        (item instanceof Wall ||
-          item instanceof Slab ||
-          item instanceof FlatRoof ||
-          item instanceof Roof) &&
+        (item instanceof Wall || item instanceof Slab || item instanceof FlatRoof || item instanceof Roof) &&
         item.isExternal == true
       )
     }
@@ -200,13 +170,8 @@ class AcousticRatingCalculator {
 
     for (const surface of filteredSurfaces) {
       const parentSpace = this.getFirstInternalConnectedSpace(surface.parentIds)
-      const acousticRatingLevel = this.getAcousticRatingLevelFromParentZone(
-        surface.parentIds,
-      )
-      if (
-        !parentSpace ||
-        parentSpace.noiseSensitivity === NOISE_SENSITIVITY_NONE
-      ) {
+      const acousticRatingLevel = this.getAcousticRatingLevelFromParentZone(surface.parentIds)
+      if (!parentSpace || parentSpace.noiseSensitivity === NOISE_SENSITIVITY_NONE) {
         continue
       }
 
@@ -221,12 +186,7 @@ class AcousticRatingCalculator {
 
   determineAcousticRatingToInternalSources() {
     function itemFilter(item: Item): item is Surface {
-      return (
-        item instanceof Wall ||
-        item instanceof Slab ||
-        item instanceof FlatRoof ||
-        item instanceof Roof
-      )
+      return item instanceof Wall || item instanceof Slab || item instanceof FlatRoof || item instanceof Roof
     }
     const filteredSurfaces: Surface[] = this.items.filter(itemFilter)
 
@@ -234,11 +194,10 @@ class AcousticRatingCalculator {
       if (surface.parentIds.length <= 1) {
         continue
       }
-      const connectedSpaces: (Space | NeighbourBuilding)[] =
-        this.getConnectedSpacesAndNeighbourBuildings(surface.parentIds)
-      const acousticRatingLevel = this.getAcousticRatingLevelFromParentZone(
+      const connectedSpaces: (Space | NeighbourBuilding)[] = this.getConnectedSpacesAndNeighbourBuildings(
         surface.parentIds,
       )
+      const acousticRatingLevel = this.getAcousticRatingLevelFromParentZone(surface.parentIds)
       // console.log(surface.id)
       // console.log(connectedSpaces)
       surface.airborneAcousticRatingToInternal =
@@ -269,14 +228,11 @@ class AcousticRatingCalculator {
     }
   }
 
-  getConnectedSpacesAndNeighbourBuildings(
-    parentIds: string[],
-  ): (Space | NeighbourBuilding)[] {
+  getConnectedSpacesAndNeighbourBuildings(parentIds: string[]): (Space | NeighbourBuilding)[] {
     function itemFilter(item: Item): item is Space | NeighbourBuilding {
       return item instanceof Space || item instanceof NeighbourBuilding
     }
-    const filteredItems: (Space | NeighbourBuilding)[] =
-      this.items.filter(itemFilter)
+    const filteredItems: (Space | NeighbourBuilding)[] = this.items.filter(itemFilter)
 
     const rooms: (Space | NeighbourBuilding)[] = []
     for (const parentId of parentIds) {
@@ -289,9 +245,7 @@ class AcousticRatingCalculator {
     return rooms
   }
 
-  getAcousticRatingLevelFromParentZone(
-    parentIds: string[],
-  ): AcousticRatingLevel {
+  getAcousticRatingLevelFromParentZone(parentIds: string[]): AcousticRatingLevel {
     for (const parentId of parentIds) {
       for (const item of this.items) {
         if (item.id === parentId) {
