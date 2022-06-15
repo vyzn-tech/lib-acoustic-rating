@@ -1,12 +1,14 @@
 import { lowerCase } from 'lodash'
 import {
   NOISE_SENSITIVITY_NONE,
+  NoiseSensitivity,
   NoiseSensitivityUtil,
 } from './noise-sensitivity'
-import { NoiseExposureUtil } from './noise-exposure'
+import { NoiseExposure, NoiseExposureUtil } from './noise-exposure'
 import {
   AcousticRatingLevel,
-  AirborneAcousticRating,
+  AirborneAcousticRatingToExternal,
+  AirborneAcousticRatingToInternal,
   AirborneAcousticRatingUtil,
 } from './airborn-acoustic-rating'
 
@@ -65,16 +67,13 @@ abstract class Item {
   id: string
   parentIds: string[]
 }
-class Building extends Item {
-  name: Name
-  status: Status
-}
 
 class Surface extends Item {
   isExternal: boolean
   celestialDirection: CelestialDirection
   externalAcousticRating: ExternalAcousticRating
-  airborneAcousticRatingTowardsExternalSources: AirborneAcousticRating
+  airborneAcousticRatingToExternal: AirborneAcousticRatingToExternal
+  airborneAcousticRatingToInternal: AirborneAcousticRatingToInternal
 }
 
 class Wall extends Surface {}
@@ -89,12 +88,20 @@ class Roof extends Surface {}
 
 class FlatRoof extends Surface {}
 
-class Space extends Item {
+class NeighbourBuilding extends Item {
   occupancyType: OccupancyType
-  noiseSensitivity: number
-  airborneNoiseExposure: number
-  footstepNoiseExposure: number
+  noiseSensitivity: NoiseSensitivity
+  airborneNoiseExposure: NoiseExposure
+  footstepNoiseExposure: NoiseExposure
+}
+
+class Space extends NeighbourBuilding {
   centerOfGravityZ: number
+}
+
+class Building extends Item {
+  name: Name
+  status: Status
 }
 
 class Zone extends Building {
@@ -146,6 +153,7 @@ class AcousticRatingCalculator {
     this.determineNoiseSensitivityAndExposure()
     this.determineAcousticRatingToExternalSources()
     this.determineAcousticRatingToInternalSources()
+    console.log(this.items.filter((item) => item instanceof Surface))
     return 'tests are working'
   }
 
@@ -166,7 +174,7 @@ class AcousticRatingCalculator {
 
   determineNoiseSensitivityAndExposure() {
     for (const item of this.items) {
-      if (item instanceof Space) {
+      if (item instanceof Space || item instanceof NeighbourBuilding) {
         item.noiseSensitivity = this.noiseSensitivityUtil.getNoiseSensitivity(
           item.occupancyType,
         )
@@ -191,23 +199,20 @@ class AcousticRatingCalculator {
     const filteredSurfaces: Surface[] = this.items.filter(itemFilter)
 
     for (const surface of filteredSurfaces) {
-      const parentRoom = this.getFirstParentRoom(
-        surface.parentIds,
-        this.filterInternalSpaces(this.items),
-      )
+      const parentSpace = this.getFirstInternalConnectedSpace(surface.parentIds)
       const acousticRatingLevel = this.getAcousticRatingLevelFromParentZone(
         surface.parentIds,
       )
       if (
-        !parentRoom ||
-        parentRoom.noiseSensitivity === NOISE_SENSITIVITY_NONE
+        !parentSpace ||
+        parentSpace.noiseSensitivity === NOISE_SENSITIVITY_NONE
       ) {
         continue
       }
 
-      surface.airborneAcousticRatingTowardsExternalSources =
+      surface.airborneAcousticRatingToExternal =
         this.airborneAcousticRatingUtil.getAirborneAcousticRatingTowardsExternalSources(
-          parentRoom.noiseSensitivity,
+          parentSpace.noiseSensitivity,
           surface.externalAcousticRating,
           acousticRatingLevel,
         )
@@ -229,56 +234,53 @@ class AcousticRatingCalculator {
       if (surface.parentIds.length <= 1) {
         continue
       }
-      const rooms = this.getParentRooms(
+      const connectedSpaces: (Space | NeighbourBuilding)[] =
+        this.getConnectedSpacesAndNeighbourBuildings(surface.parentIds)
+      const acousticRatingLevel = this.getAcousticRatingLevelFromParentZone(
         surface.parentIds,
-        this.filterSpaceAndBuilding(this.items),
       )
-      console.log(rooms)
+      // console.log(surface.id)
+      // console.log(connectedSpaces)
+      surface.airborneAcousticRatingToInternal =
+        this.airborneAcousticRatingUtil.getAirborneAcousticRatingTowardsInternalSources(
+          connectedSpaces,
+          acousticRatingLevel,
+        )
     }
   }
 
-  filterInternalSpaces(items: Item[]): Space[] {
-    const filteredItems: Space[] = []
-    for (const item of items) {
-      if (
+  getFirstInternalConnectedSpace(parentIds: string[]): Space {
+    function itemFilter(item: Item): item is Space {
+      return (
         item instanceof Space &&
         item.occupancyType !== 'Balkon' &&
         item.occupancyType !== 'Attika' &&
         item.occupancyType !== 'Terrasse'
-      ) {
-        filteredItems.push(item)
-      }
+      )
     }
-    return filteredItems
-  }
+    const filteredSpaces: Space[] = this.items.filter(itemFilter)
 
-  filterSpaceAndBuilding(items: Item[]): (Space | Building)[] {
-    const filteredItems: (Space | Building)[] = []
-    for (const item of items) {
-      if (item instanceof Space || item instanceof Building) {
-        filteredItems.push(item)
-      }
-    }
-    return filteredItems
-  }
-
-  getFirstParentRoom(parentIds: string[], items: Space[]): Space {
     for (const parentId of parentIds) {
-      for (const item of items) {
-        if (item.id === parentId) {
-          return item
+      for (const space of filteredSpaces) {
+        if (space.id === parentId) {
+          return space
         }
       }
     }
   }
 
-  getParentRooms(
+  getConnectedSpacesAndNeighbourBuildings(
     parentIds: string[],
-    items: (Space | Building)[],
-  ): (Space | Building)[] {
-    const rooms: (Space | Building)[] = []
+  ): (Space | NeighbourBuilding)[] {
+    function itemFilter(item: Item): item is Space | NeighbourBuilding {
+      return item instanceof Space || item instanceof NeighbourBuilding
+    }
+    const filteredItems: (Space | NeighbourBuilding)[] =
+      this.items.filter(itemFilter)
+
+    const rooms: (Space | NeighbourBuilding)[] = []
     for (const parentId of parentIds) {
-      for (const item of items) {
+      for (const item of filteredItems) {
         if (item.id === parentId) {
           rooms.push(item)
         }
@@ -317,6 +319,7 @@ export {
   ExternalAcousticRatingCollection,
   ExternalAcousticRating,
   Building,
+  NeighbourBuilding,
   Door,
   Roof,
   FlatRoof,

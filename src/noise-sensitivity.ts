@@ -1,9 +1,23 @@
+import { NoiseExposure } from './noise-exposure'
+
 const NOISE_SENSITIVITY_NONE = null
 const NOISE_SENSITIVITY_LOW = 1
 const NOISE_SENSITIVITY_MODERATE = 2
 const NOISE_SENSITIVITY_HIGH = 3
 
-const NOISE_SENSITIVITY_MAP_SIA181_2020 = {
+const NOISE_SENSITIVITY_LEVELS = <const>[
+  NOISE_SENSITIVITY_NONE,
+  NOISE_SENSITIVITY_LOW,
+  NOISE_SENSITIVITY_MODERATE,
+  NOISE_SENSITIVITY_HIGH,
+]
+
+type NoiseSensitivity = typeof NOISE_SENSITIVITY_LEVELS[number]
+interface NoiseSensitivityMap {
+  [name: string]: NoiseExposure
+}
+
+const NOISE_SENSITIVITY_MAP_SIA181_2020: NoiseSensitivityMap = {
   Abstellraum: NOISE_SENSITIVITY_NONE,
   Lagerraum: NOISE_SENSITIVITY_NONE,
   Keller: NOISE_SENSITIVITY_NONE,
@@ -41,13 +55,13 @@ const NOISE_SENSITIVITY_MAP_SIA181_2020 = {
   Studierzimmer: NOISE_SENSITIVITY_HIGH,
 }
 
-const NOISE_SENSITIVITY_MAP_SIA181_2006 = {
+const NOISE_SENSITIVITY_MAP_SIA181_2006: NoiseSensitivityMap = {
   Kantine: NOISE_SENSITIVITY_LOW,
   Verkauf: NOISE_SENSITIVITY_LOW,
   Spitalzimmer: NOISE_SENSITIVITY_HIGH,
 }
 
-const NOISE_SENSITIVITY_MAP_SEESTRASSE = {
+const NOISE_SENSITIVITY_MAP_SEESTRASSE: NoiseSensitivityMap = {
   Terrasse: NOISE_SENSITIVITY_NONE,
   Waschraum: NOISE_SENSITIVITY_NONE,
   Einfahrt: NOISE_SENSITIVITY_NONE,
@@ -62,7 +76,7 @@ const NOISE_SENSITIVITY_MAP_SEESTRASSE = {
 }
 
 class NoiseSensitivityUtil {
-  getNoiseSensitivity(occupancy: string) {
+  getNoiseSensitivity(occupancy: string): NoiseSensitivity {
     const map = {
       ...NOISE_SENSITIVITY_MAP_SIA181_2006,
       ...NOISE_SENSITIVITY_MAP_SIA181_2020,
@@ -82,5 +96,6 @@ export {
   NOISE_SENSITIVITY_LOW,
   NOISE_SENSITIVITY_MODERATE,
   NOISE_SENSITIVITY_HIGH,
+  NoiseSensitivity,
   NoiseSensitivityUtil,
 }

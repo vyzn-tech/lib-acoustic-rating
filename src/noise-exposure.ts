@@ -3,7 +3,18 @@ const NOISE_EXPOSURE_MODERATE = 2
 const NOISE_EXPOSURE_HIGH = 3
 const NOISE_EXPOSURE_VERY_HIGH = 4
 
-const NOISE_EXPOSURE_MAP_SIA181_2020_AIRBORNE = {
+const NOISE_EXPOSURE_LEVELS = <const>[
+  NOISE_EXPOSURE_LOW,
+  NOISE_EXPOSURE_MODERATE,
+  NOISE_EXPOSURE_HIGH,
+  NOISE_EXPOSURE_VERY_HIGH,
+]
+type NoiseExposure = typeof NOISE_EXPOSURE_LEVELS[number]
+interface NoiseExposureMap {
+  [name: string]: NoiseExposure
+}
+
+const NOISE_EXPOSURE_MAP_SIA181_2020_AIRBORNE: NoiseExposureMap = {
   Kellerraum: NOISE_EXPOSURE_LOW,
   Leseraum: NOISE_EXPOSURE_LOW,
   Warteraum: NOISE_EXPOSURE_LOW,
@@ -53,12 +64,12 @@ const NOISE_EXPOSURE_MAP_SIA181_2020_AIRBORNE = {
   Sporthalle: NOISE_EXPOSURE_VERY_HIGH,
 }
 
-const NOISE_EXPOSURE_MAP_SIA181_2006_AIRBORNE = {
+const NOISE_EXPOSURE_MAP_SIA181_2006_AIRBORNE: NoiseExposureMap = {
   Konferenzraum: NOISE_EXPOSURE_MODERATE,
   Versammlungsraum: NOISE_EXPOSURE_HIGH,
 }
 
-const NOISE_EXPOSURE_MAP_SIA181_2020_FOOTSTEP = {
+const NOISE_EXPOSURE_MAP_SIA181_2020_FOOTSTEP: NoiseExposureMap = {
   Kellerraum: NOISE_EXPOSURE_LOW,
   Leseraum: NOISE_EXPOSURE_LOW,
   Warteraum: NOISE_EXPOSURE_LOW,
@@ -92,11 +103,11 @@ const NOISE_EXPOSURE_MAP_SIA181_2020_FOOTSTEP = {
   Sporthalle: NOISE_EXPOSURE_HIGH,
 }
 
-const NOISE_EXPOSURE_MAP_SIA181_2006_FOOTSTEP = {
+const NOISE_EXPOSURE_MAP_SIA181_2006_FOOTSTEP: NoiseExposureMap = {
   Versammlungsraum: NOISE_EXPOSURE_HIGH,
 }
 
-const NOISE_EXPOSURE_MAP_SEESTRASSE_AIRBORNE = {
+const NOISE_EXPOSURE_MAP_SEESTRASSE_AIRBORNE: NoiseExposureMap = {
   Keller: NOISE_EXPOSURE_LOW,
   Wohnen: NOISE_EXPOSURE_MODERATE,
   Schlafen: NOISE_EXPOSURE_MODERATE,
@@ -110,7 +121,7 @@ const NOISE_EXPOSURE_MAP_SEESTRASSE_AIRBORNE = {
   Gewerbe: NOISE_EXPOSURE_VERY_HIGH,
 }
 
-const NOISE_EXPOSURE_MAP_SEESTRASSE_FOOTSTEP = {
+const NOISE_EXPOSURE_MAP_SEESTRASSE_FOOTSTEP: NoiseExposureMap = {
   Keller: NOISE_EXPOSURE_LOW,
   Wohnen: NOISE_EXPOSURE_MODERATE,
   Schlafen: NOISE_EXPOSURE_MODERATE,
@@ -125,7 +136,7 @@ const NOISE_EXPOSURE_MAP_SEESTRASSE_FOOTSTEP = {
 }
 
 class NoiseExposureUtil {
-  getAirborneNoiseExposure(occupancy: string) {
+  getAirborneNoiseExposure(occupancy: string): NoiseExposure {
     const map = {
       ...NOISE_EXPOSURE_MAP_SIA181_2006_AIRBORNE,
       ...NOISE_EXPOSURE_MAP_SIA181_2020_AIRBORNE,
@@ -139,7 +150,7 @@ class NoiseExposureUtil {
     }
   }
 
-  getFootstepNoiseExposure(occupancy: string) {
+  getFootstepNoiseExposure(occupancy: string): NoiseExposure {
     const map = {
       ...NOISE_EXPOSURE_MAP_SIA181_2006_FOOTSTEP,
       ...NOISE_EXPOSURE_MAP_SIA181_2020_FOOTSTEP,
@@ -159,5 +170,6 @@ export {
   NOISE_EXPOSURE_MODERATE,
   NOISE_EXPOSURE_HIGH,
   NOISE_EXPOSURE_VERY_HIGH,
+  NoiseExposure,
   NoiseExposureUtil,
 }
