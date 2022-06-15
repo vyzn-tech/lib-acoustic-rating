@@ -46,11 +46,11 @@ type OccupancyType =
   | 'Attika'
   | 'Terrasse'
 
-abstract class Item {
+abstract class Component {
   constructor(public id: string, public parentIds: string[]) {}
 }
 
-class Surface extends Item {
+class Surface extends Component {
   externalAcousticRating: ExternalAcousticRating
   airborneAcousticRatingToExternal: AirborneAcousticRatingToExternal
   airborneAcousticRatingToInternal: AirborneAcousticRatingToInternal
@@ -84,7 +84,7 @@ class Roof extends Surface {}
 
 class FlatRoof extends Surface {}
 
-class NeighbourBuilding extends Item {
+class NeighbourBuilding extends Component {
   noiseSensitivity: NoiseSensitivity
   airborneNoiseExposure: NoiseExposure
   footstepNoiseExposure: NoiseExposure
@@ -104,7 +104,7 @@ class Space extends NeighbourBuilding {
   }
 }
 
-class Building extends Item {
+class Building extends Component {
   constructor(public id: string, public parentIds: string[], public name: Name, public status: Status) {
     super(id, parentIds)
   }
@@ -152,13 +152,13 @@ class ExternalAcousticRatingCollection {
 }
 
 class AcousticRatingCalculator {
-  items: Item[]
+  items: Component[]
   externalAcousticRatings: ExternalAcousticRatingCollection
   noiseSensitivityUtil = new NoiseSensitivityUtil()
   noiseExposureUtil = new NoiseExposureUtil()
   airborneAcousticRatingUtil = new AirborneAcousticRatingUtil()
 
-  constructor(items: Item[], externalAcousticRatings: ExternalAcousticRatingCollection) {
+  constructor(items: Component[], externalAcousticRatings: ExternalAcousticRatingCollection) {
     this.items = items
     this.externalAcousticRatings = externalAcousticRatings
   }
@@ -169,12 +169,12 @@ class AcousticRatingCalculator {
     this.determineNoiseSensitivityAndExposure()
     this.determineAcousticRatingToExternalSources()
     this.determineAcousticRatingToInternalSources()
-    for (const item of this.items) {
-      if (item instanceof Surface) {
+    for (const component of this.items) {
+      if (component instanceof Surface) {
         output.push(
           new OutputItem(
-            item.id,
-            AcousticRatingCalculator.getMaxAirborneAcousticRating(item),
+            component.id,
+            AcousticRatingCalculator.getMaxAirborneAcousticRating(component),
             null,
             null,
             null,
@@ -188,11 +188,11 @@ class AcousticRatingCalculator {
   }
 
   private setExternalAcousticRating() {
-    for (const item of this.items) {
-      if (item instanceof Surface && item.hasOwnProperty('celestialDirection')) {
+    for (const component of this.items) {
+      if (component instanceof Surface && component.hasOwnProperty('celestialDirection')) {
         for (const key in this.externalAcousticRatings) {
-          if (key === lowerCase(item.celestialDirection)) {
-            item.externalAcousticRating = this.externalAcousticRatings[key]
+          if (key === lowerCase(component.celestialDirection)) {
+            component.externalAcousticRating = this.externalAcousticRatings[key]
           }
         }
       }
@@ -200,20 +200,23 @@ class AcousticRatingCalculator {
   }
 
   private determineNoiseSensitivityAndExposure() {
-    for (const item of this.items) {
-      if (item instanceof Space || item instanceof NeighbourBuilding) {
-        item.noiseSensitivity = this.noiseSensitivityUtil.getNoiseSensitivity(item.occupancyType)
-        item.airborneNoiseExposure = this.noiseExposureUtil.getAirborneNoiseExposure(item.occupancyType)
-        item.footstepNoiseExposure = this.noiseExposureUtil.getFootstepNoiseExposure(item.occupancyType)
+    for (const component of this.items) {
+      if (component instanceof Space || component instanceof NeighbourBuilding) {
+        component.noiseSensitivity = this.noiseSensitivityUtil.getNoiseSensitivity(component.occupancyType)
+        component.airborneNoiseExposure = this.noiseExposureUtil.getAirborneNoiseExposure(component.occupancyType)
+        component.footstepNoiseExposure = this.noiseExposureUtil.getFootstepNoiseExposure(component.occupancyType)
       }
     }
   }
 
   private determineAcousticRatingToExternalSources() {
-    function itemFilter(item: Item): item is Surface {
+    function itemFilter(component: Component): component is Surface {
       return (
-        (item instanceof Wall || item instanceof Slab || item instanceof FlatRoof || item instanceof Roof) &&
-        item.isExternal == true
+        (component instanceof Wall ||
+          component instanceof Slab ||
+          component instanceof FlatRoof ||
+          component instanceof Roof) &&
+        component.isExternal == true
       )
     }
     const filteredSurfaces: Surface[] = this.items.filter(itemFilter)
@@ -235,8 +238,13 @@ class AcousticRatingCalculator {
   }
 
   private determineAcousticRatingToInternalSources() {
-    function itemFilter(item: Item): item is Surface {
-      return item instanceof Wall || item instanceof Slab || item instanceof FlatRoof || item instanceof Roof
+    function itemFilter(component: Component): component is Surface {
+      return (
+        component instanceof Wall ||
+        component instanceof Slab ||
+        component instanceof FlatRoof ||
+        component instanceof Roof
+      )
     }
     const filteredSurfaces: Surface[] = this.items.filter(itemFilter)
 
@@ -276,12 +284,12 @@ class AcousticRatingCalculator {
   }
 
   private getFirstInternalConnectedSpace(parentIds: string[]): Space {
-    function itemFilter(item: Item): item is Space {
+    function itemFilter(component: Component): component is Space {
       return (
-        item instanceof Space &&
-        item.occupancyType !== 'Balkon' &&
-        item.occupancyType !== 'Attika' &&
-        item.occupancyType !== 'Terrasse'
+        component instanceof Space &&
+        component.occupancyType !== 'Balkon' &&
+        component.occupancyType !== 'Attika' &&
+        component.occupancyType !== 'Terrasse'
       )
     }
     const filteredSpaces: Space[] = this.items.filter(itemFilter)
@@ -296,16 +304,16 @@ class AcousticRatingCalculator {
   }
 
   private getConnectedSpacesAndNeighbourBuildings(parentIds: string[]): (Space | NeighbourBuilding)[] {
-    function itemFilter(item: Item): item is Space | NeighbourBuilding {
-      return item instanceof Space || item instanceof NeighbourBuilding
+    function itemFilter(component: Component): component is Space | NeighbourBuilding {
+      return component instanceof Space || component instanceof NeighbourBuilding
     }
     const filteredItems: (Space | NeighbourBuilding)[] = this.items.filter(itemFilter)
 
     const rooms: (Space | NeighbourBuilding)[] = []
     for (const parentId of parentIds) {
-      for (const item of filteredItems) {
-        if (item.id === parentId) {
-          rooms.push(item)
+      for (const component of filteredItems) {
+        if (component.id === parentId) {
+          rooms.push(component)
         }
       }
     }
@@ -314,13 +322,13 @@ class AcousticRatingCalculator {
 
   private getAcousticRatingLevelFromParentZone(parentIds: string[]): AcousticRatingLevel {
     for (const parentId of parentIds) {
-      for (const item of this.items) {
-        if (item.id === parentId) {
-          if (item instanceof Zone) {
-            return item.acousticRatingLevel
+      for (const component of this.items) {
+        if (component.id === parentId) {
+          if (component instanceof Zone) {
+            return component.acousticRatingLevel
           }
-          if (item.parentIds && item.parentIds.length) {
-            return this.getAcousticRatingLevelFromParentZone(item.parentIds)
+          if (component.parentIds && component.parentIds.length) {
+            return this.getAcousticRatingLevelFromParentZone(component.parentIds)
           }
         }
       }
@@ -336,7 +344,7 @@ export {
   AcousticRatingCalculator,
   CelestialDirection,
   Surface,
-  Item,
+  Component,
   ExternalAcousticRatingCollection,
   ExternalAcousticRating,
   Building,
