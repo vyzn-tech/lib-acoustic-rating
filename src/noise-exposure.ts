@@ -52,13 +52,11 @@ const NOISE_EXPOSURE_MAP_SIA181_2020_AIRBORNE: NoiseExposureMap = {
   Kindergarten: NOISE_EXPOSURE_HIGH,
   Technikraum: NOISE_EXPOSURE_HIGH,
   'Restaurant ohne Beschallung': NOISE_EXPOSURE_HIGH,
-  'Verkaufsraum mit Beschallung und dazugehörende Erschliessungsräume':
-    NOISE_EXPOSURE_HIGH,
+  'Verkaufsraum mit Beschallung und dazugehörende Erschliessungsräume': NOISE_EXPOSURE_HIGH,
   'Einstellhalle mit gewerblicher Nutzung': NOISE_EXPOSURE_HIGH,
 
   Gewerbebetrieb: NOISE_EXPOSURE_VERY_HIGH,
-  'Restaurant mit Beschallung und dazugehörende Erschliessungsräume':
-    NOISE_EXPOSURE_VERY_HIGH,
+  'Restaurant mit Beschallung und dazugehörende Erschliessungsräume': NOISE_EXPOSURE_VERY_HIGH,
   Werkstatt: NOISE_EXPOSURE_VERY_HIGH,
   Musikübungsraum: NOISE_EXPOSURE_VERY_HIGH,
   Sporthalle: NOISE_EXPOSURE_VERY_HIGH,
@@ -96,8 +94,7 @@ const NOISE_EXPOSURE_MAP_SIA181_2020_FOOTSTEP: NoiseExposureMap = {
   Kinderkrippe: NOISE_EXPOSURE_HIGH,
   Kindergarten: NOISE_EXPOSURE_HIGH,
   'Restaurant ohne Beschallung': NOISE_EXPOSURE_HIGH,
-  'Restaurant mit Beschallung und dazugehörende Erschliessungsräume':
-    NOISE_EXPOSURE_HIGH,
+  'Restaurant mit Beschallung und dazugehörende Erschliessungsräume': NOISE_EXPOSURE_HIGH,
   Werkstatt: NOISE_EXPOSURE_HIGH,
   Musikübungsraum: NOISE_EXPOSURE_HIGH,
   Sporthalle: NOISE_EXPOSURE_HIGH,

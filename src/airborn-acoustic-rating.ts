@@ -15,10 +15,7 @@ import { ExternalAcousticRating, NeighbourBuilding, Space } from './calculator'
 
 const ACOUSTIC_RATING_LEVEL_MINIMUM = 'Mindestanforderungen'
 const ACOUSTIC_RATING_LEVEL_ENHANCED = 'Erhoehte Anforderungen'
-const ACOUSTIC_RATING_LEVELS = <const>[
-  ACOUSTIC_RATING_LEVEL_MINIMUM,
-  ACOUSTIC_RATING_LEVEL_ENHANCED,
-]
+const ACOUSTIC_RATING_LEVELS = <const>[ACOUSTIC_RATING_LEVEL_MINIMUM, ACOUSTIC_RATING_LEVEL_ENHANCED]
 type AcousticRatingLevel = typeof ACOUSTIC_RATING_LEVELS[number]
 
 const ACOUSTIC_RATING_LEVEL_LIMIT_LOW = 52
@@ -26,18 +23,12 @@ const ACOUSTIC_RATING_LEVEL_LIMIT_HIGH = 60
 
 const ACOUSTIC_RATING_LEVEL_PERIOD_DAY = 'day'
 const ACOUSTIC_RATING_LEVEL_PERIOD_NIGHT = 'night'
-const ACOUSTIC_RATING_LEVEL_PERIODS = <const>[
-  ACOUSTIC_RATING_LEVEL_PERIOD_DAY,
-  ACOUSTIC_RATING_LEVEL_PERIOD_NIGHT,
-]
+const ACOUSTIC_RATING_LEVEL_PERIODS = <const>[ACOUSTIC_RATING_LEVEL_PERIOD_DAY, ACOUSTIC_RATING_LEVEL_PERIOD_NIGHT]
 type AcousticRatingPeriod = typeof ACOUSTIC_RATING_LEVEL_PERIODS[number]
 
 const ACOUSTIC_RATING_LEVEL_TYPE_INDOOR = 'indoor'
 const ACOUSTIC_RATING_LEVEL_TYPE_OUTDOOR = 'outdoor'
-const ACOUSTIC_RATING_LEVEL_TYPES = <const>[
-  ACOUSTIC_RATING_LEVEL_TYPE_INDOOR,
-  ACOUSTIC_RATING_LEVEL_TYPE_OUTDOOR,
-]
+const ACOUSTIC_RATING_LEVEL_TYPES = <const>[ACOUSTIC_RATING_LEVEL_TYPE_INDOOR, ACOUSTIC_RATING_LEVEL_TYPE_OUTDOOR]
 type AcousticRatingType = typeof ACOUSTIC_RATING_LEVEL_TYPES[number]
 
 const INDOOR_MAP = {
@@ -95,11 +86,7 @@ const OUTDOOR_MAP = {
 }
 
 class AirborneAcousticRatingToExternal {
-  constructor(
-    public lrDay: number,
-    public lrNight: number,
-    public de: number,
-  ) {}
+  constructor(public lrDay: number, public lrNight: number, public de: number) {}
 }
 
 class AirborneAcousticRatingToInternal {
@@ -124,18 +111,16 @@ class AirborneAcousticRatingUtil {
     )
 
     if (acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
-      lrDay =
-        AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
-          lrDay,
-          acousticRatingLevel,
-          ACOUSTIC_RATING_LEVEL_TYPE_OUTDOOR,
-        )
-      lrNight =
-        AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
-          lrNight,
-          acousticRatingLevel,
-          ACOUSTIC_RATING_LEVEL_TYPE_OUTDOOR,
-        )
+      lrDay = AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
+        lrDay,
+        acousticRatingLevel,
+        ACOUSTIC_RATING_LEVEL_TYPE_OUTDOOR,
+      )
+      lrNight = AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
+        lrNight,
+        acousticRatingLevel,
+        ACOUSTIC_RATING_LEVEL_TYPE_OUTDOOR,
+      )
     }
 
     //@todo figure out why we need "de"
@@ -169,12 +154,11 @@ class AirborneAcousticRatingUtil {
         spaces[0].noiseSensitivity,
         spaces[1].airborneNoiseExposure,
       )
-      di1 =
-        AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
-          di1,
-          acousticRatingLevel,
-          ACOUSTIC_RATING_LEVEL_TYPE_INDOOR,
-        )
+      di1 = AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
+        di1,
+        acousticRatingLevel,
+        ACOUSTIC_RATING_LEVEL_TYPE_INDOOR,
+      )
     }
 
     if (spaces[1].noiseSensitivity && spaces[0].airborneNoiseExposure) {
@@ -182,21 +166,17 @@ class AirborneAcousticRatingUtil {
         spaces[1].noiseSensitivity,
         spaces[0].airborneNoiseExposure,
       )
-      di2 =
-        AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
-          di2,
-          acousticRatingLevel,
-          ACOUSTIC_RATING_LEVEL_TYPE_INDOOR,
-        )
+      di2 = AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
+        di2,
+        acousticRatingLevel,
+        ACOUSTIC_RATING_LEVEL_TYPE_INDOOR,
+      )
     }
 
     return new AirborneAcousticRatingToInternal(di1, di2)
   }
 
-  private static getIndoorAcousticRating(
-    noiseSensitivity: NoiseSensitivity,
-    noiseExposure: NoiseExposure,
-  ): number {
+  private static getIndoorAcousticRating(noiseSensitivity: NoiseSensitivity, noiseExposure: NoiseExposure): number {
     return INDOOR_MAP[noiseSensitivity][noiseExposure]
   }
 
@@ -205,16 +185,10 @@ class AirborneAcousticRatingUtil {
     acousticRatingLevel: AcousticRatingLevel,
     type: AcousticRatingType,
   ) {
-    if (
-      type === ACOUSTIC_RATING_LEVEL_TYPE_OUTDOOR &&
-      acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED
-    ) {
+    if (type === ACOUSTIC_RATING_LEVEL_TYPE_OUTDOOR && acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
       return value + 3
     }
-    if (
-      type === ACOUSTIC_RATING_LEVEL_TYPE_INDOOR &&
-      acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED
-    ) {
+    if (type === ACOUSTIC_RATING_LEVEL_TYPE_INDOOR && acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
       return value + 4
     }
     return value
