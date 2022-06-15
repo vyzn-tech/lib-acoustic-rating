@@ -9,8 +9,18 @@ import {
   NOISE_EXPOSURE_MODERATE,
   NOISE_EXPOSURE_VERY_HIGH,
 } from './noise-exposure'
+import { ExternalAcousticRating } from './calculator'
 
-const NOISE_RATING_LEVEL_PERIOD_DAY = 'day'
+const ACOUSTIC_RATING_LEVEL_MINIMUM = 'Mindestanforderungen'
+const ACOUSTIC_RATING_LEVEL_ENHANCED = 'Erhoehte Anforderungen'
+const ACOUSTIC_RATING_LEVELS = <const>[
+  ACOUSTIC_RATING_LEVEL_MINIMUM,
+  ACOUSTIC_RATING_LEVEL_ENHANCED,
+]
+
+type AcousticRatingLevel = typeof ACOUSTIC_RATING_LEVELS[number]
+
+const ACOUSTIC_RATING_LEVEL_PERIOD_DAY = 'day'
 const ACOUSTIC_RATING_LEVEL_PERIOD_NIGHT = 'night'
 const ACOUSTIC_RATING_LEVEL_LOW = 52
 const ACOUSTIC_RATING_LEVEL_HIGH = 60
@@ -38,7 +48,7 @@ const INDOOR_MAP = {
 
 const OUTDOOR_MAP = {
   [NOISE_SENSITIVITY_LOW]: {
-    [NOISE_RATING_LEVEL_PERIOD_DAY]: {
+    [ACOUSTIC_RATING_LEVEL_PERIOD_DAY]: {
       [ACOUSTIC_RATING_LEVEL_LOW]: 22,
       [ACOUSTIC_RATING_LEVEL_HIGH]: 38,
     },
@@ -48,7 +58,7 @@ const OUTDOOR_MAP = {
     },
   },
   [NOISE_SENSITIVITY_MODERATE]: {
-    [NOISE_RATING_LEVEL_PERIOD_DAY]: {
+    [ACOUSTIC_RATING_LEVEL_PERIOD_DAY]: {
       [ACOUSTIC_RATING_LEVEL_LOW]: 27,
       [ACOUSTIC_RATING_LEVEL_HIGH]: 33,
     },
@@ -58,7 +68,7 @@ const OUTDOOR_MAP = {
     },
   },
   [NOISE_SENSITIVITY_HIGH]: {
-    [NOISE_RATING_LEVEL_PERIOD_DAY]: {
+    [ACOUSTIC_RATING_LEVEL_PERIOD_DAY]: {
       [ACOUSTIC_RATING_LEVEL_LOW]: 32,
       [ACOUSTIC_RATING_LEVEL_HIGH]: 28,
     },
@@ -69,26 +79,33 @@ const OUTDOOR_MAP = {
   },
 }
 
+class AirborneAcousticRating {
+  constructor(public lrDay: number, public lrNight: number) {}
+}
+
 class AirborneAcousticRatingUtil {
-  public getOutdoorAcousticRatingDay(
+  public getAirborneAcousticRatingTowardsExternalSources(
     noiseSensitivity,
-    externalAcousticRatingDay,
+    externalAcousticRating: ExternalAcousticRating,
+    acousticRatingLevel,
   ) {
-    return AirborneAcousticRatingUtil.getOutdoorAcousticRating(
-      NOISE_RATING_LEVEL_PERIOD_DAY,
+    let lrDay = AirborneAcousticRatingUtil.getOutdoorAcousticRating(
+      ACOUSTIC_RATING_LEVEL_PERIOD_DAY,
       noiseSensitivity,
-      externalAcousticRatingDay,
+      externalAcousticRating.day,
     )
-  }
-  public getOutdoorAcousticRatingNight(
-    noiseSensitivity,
-    externalAcousticRatingNight,
-  ) {
-    return AirborneAcousticRatingUtil.getOutdoorAcousticRating(
+    let lrNight = AirborneAcousticRatingUtil.getOutdoorAcousticRating(
       ACOUSTIC_RATING_LEVEL_PERIOD_NIGHT,
       noiseSensitivity,
-      externalAcousticRatingNight,
+      externalAcousticRating.night,
     )
+
+    if (acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
+      lrDay += 3
+      lrNight += 3
+    }
+
+    return new AirborneAcousticRating(lrDay, lrNight)
   }
 
   private static getOutdoorAcousticRating(
@@ -104,4 +121,11 @@ class AirborneAcousticRatingUtil {
   }
 }
 
-export default AirborneAcousticRatingUtil
+export {
+  ACOUSTIC_RATING_LEVEL_MINIMUM,
+  ACOUSTIC_RATING_LEVEL_ENHANCED,
+  ACOUSTIC_RATING_LEVELS,
+  AcousticRatingLevel,
+  AirborneAcousticRating,
+  AirborneAcousticRatingUtil,
+}

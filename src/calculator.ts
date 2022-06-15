@@ -4,7 +4,11 @@ import {
   NoiseSensitivityUtil,
 } from './noise-sensitivity'
 import { NoiseExposureUtil } from './noise-exposure'
-import AirborneAcousticRatingUtil from './airborn-acoustic-rating'
+import {
+  AcousticRatingLevel,
+  AirborneAcousticRating,
+  AirborneAcousticRatingUtil,
+} from './airborn-acoustic-rating'
 
 type CelestialDirection =
   | null
@@ -18,15 +22,6 @@ type CelestialDirection =
   | 'NW'
 type Status = 'new' | 'temporary' | 'existing' | 'demolish'
 type Name = 'Wand' | 'Decke' | 'Flachdach' | 'Steildach' | 'Bodenplatte'
-
-const ACOUSTIC_RATING_LEVEL_MINIMUM = 'Mindestanforderungen'
-const ACOUSTIC_RATING_LEVEL_ENHANCED = 'Erhoehte Anforderungen'
-const ACOUSTIC_RATING_LEVELS = <const>[
-  ACOUSTIC_RATING_LEVEL_MINIMUM,
-  ACOUSTIC_RATING_LEVEL_ENHANCED,
-]
-
-type AcousticRatingLevelReq = typeof ACOUSTIC_RATING_LEVELS[number]
 
 const PREDEFINED_TYPE_FLOOR = 'FLOOR'
 const PREDEFINED_TYPE_BASESLAB = 'BASESLAB'
@@ -64,6 +59,7 @@ type OccupancyType =
   | 'Studierzimmer'
   | 'Balkon'
   | 'Attika'
+  | 'Terrasse'
 
 abstract class Item {
   id: string
@@ -77,14 +73,8 @@ class Building extends Item {
 class Surface extends Item {
   isExternal: boolean
   celestialDirection: CelestialDirection
-  externalAcousticRatingDay: number
-  externalAcousticRatingNight: number
-  airborneAcousticRatingExternal: number
-  airborneAcousticRatingInternal: number
-  decibelSender: number
-  decibelReceiver: number
-  lrDay: number
-  lrNight: number
+  externalAcousticRating: ExternalAcousticRating
+  airborneAcousticRatingTowardsExternalSources: AirborneAcousticRating
 }
 
 class Wall extends Surface {}
@@ -108,10 +98,10 @@ class Space extends Item {
 }
 
 class Zone extends Building {
-  acousticRatingLevelReq: AcousticRatingLevelReq
+  acousticRatingLevel: AcousticRatingLevel
 }
 
-class OutputComponent {
+class OutputItem {
   id: string
   airborneAcousticRatingCReq: number
   airborneAcousticRatingCtrReq: number
@@ -167,10 +157,7 @@ class AcousticRatingCalculator {
       ) {
         for (const key in this.externalAcousticRatings) {
           if (key === lowerCase(item.celestialDirection)) {
-            item.externalAcousticRatingDay =
-              this.externalAcousticRatings[key].day
-            item.externalAcousticRatingNight =
-              this.externalAcousticRatings[key].night
+            item.externalAcousticRating = this.externalAcousticRatings[key]
           }
         }
       }
@@ -192,82 +179,72 @@ class AcousticRatingCalculator {
   }
 
   determineAcousticRatingToExternalSources() {
-    for (const item of this.items) {
-      if (
+    function itemFilter(item: Item): item is Surface {
+      return (
         (item instanceof Wall ||
           item instanceof Slab ||
           item instanceof FlatRoof ||
           item instanceof Roof) &&
         item.isExternal == true
+      )
+    }
+    const filteredSurfaces: Surface[] = this.items.filter(itemFilter)
+
+    for (const surface of filteredSurfaces) {
+      const parentRoom = this.getFirstParentRoom(
+        surface.parentIds,
+        this.filterInternalSpaces(this.items),
+      )
+      const acousticRatingLevel = this.getAcousticRatingLevelFromParentZone(
+        surface.parentIds,
+      )
+      if (
+        !parentRoom ||
+        parentRoom.noiseSensitivity === NOISE_SENSITIVITY_NONE
       ) {
-        const possibleParentRooms = this.filterForSpace(this.items)
-        const parentRoom = this.getFirstParentRoom(
-          item.parentIds,
-          possibleParentRooms,
-        )
-        const acousticRatingLevel = this.getAcousticRatingLevel(item.parentIds)
-        if (parentRoom.noiseSensitivity === NOISE_SENSITIVITY_NONE) {
-          item.decibelReceiver = 0
-          continue
-        }
-
-        let lrDay = this.airborneAcousticRatingUtil.getOutdoorAcousticRatingDay(
-          parentRoom.noiseSensitivity,
-          item.externalAcousticRatingDay,
-        )
-        let lrNight =
-          this.airborneAcousticRatingUtil.getOutdoorAcousticRatingNight(
-            parentRoom.noiseSensitivity,
-            item.externalAcousticRatingNight,
-          )
-
-        if (acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
-          lrDay += 3
-          lrNight += 3
-        }
-
-        item.lrDay = lrDay
-        item.lrNight = lrNight
+        continue
       }
+
+      surface.airborneAcousticRatingTowardsExternalSources =
+        this.airborneAcousticRatingUtil.getAirborneAcousticRatingTowardsExternalSources(
+          parentRoom.noiseSensitivity,
+          surface.externalAcousticRating,
+          acousticRatingLevel,
+        )
     }
   }
 
   determineAcousticRatingToInternalSources() {
-    for (const item of this.items) {
-      if (
+    function itemFilter(item: Item): item is Surface {
+      return (
         item instanceof Wall ||
         item instanceof Slab ||
         item instanceof FlatRoof ||
         item instanceof Roof
-      ) {
-        if (item.parentIds.length <= 1) {
-          item.decibelSender = 0
-          continue
-        }
-        const possibleParentRooms = this.filterForSpaceAndBuilding(this.items)
-        const rooms = this.getParentRooms(item.parentIds, possibleParentRooms)
-        console.log(rooms)
+      )
+    }
+    const filteredSurfaces: Surface[] = this.items.filter(itemFilter)
+
+    for (const surface of filteredSurfaces) {
+      if (surface.parentIds.length <= 1) {
+        continue
       }
+      const rooms = this.getParentRooms(
+        surface.parentIds,
+        this.filterSpaceAndBuilding(this.items),
+      )
+      console.log(rooms)
     }
   }
 
-  filterForZone(items: Item[]): Zone[] {
-    const filteredItems: Zone[] = []
-    for (const item of items) {
-      if (item instanceof Zone) {
-        filteredItems.push(item)
-      }
-    }
-    return filteredItems
-  }
-
-  filterForSpace(items: Item[]): Space[] {
+  filterInternalSpaces(items: Item[]): Space[] {
     const filteredItems: Space[] = []
     for (const item of items) {
       if (
         item instanceof Space &&
         item.occupancyType !== 'Balkon' &&
-        item.occupancyType !== 'Attika'
+        item.occupancyType !== 'Attika' &&
+        item.occupancyType !== 'Terrasse'
       ) {
         filteredItems.push(item)
       }
@@ -275,7 +252,7 @@ class AcousticRatingCalculator {
     return filteredItems
   }
 
-  filterForSpaceAndBuilding(items: Item[]): (Space | Building)[] {
+  filterSpaceAndBuilding(items: Item[]): (Space | Building)[] {
     const filteredItems: (Space | Building)[] = []
     for (const item of items) {
       if (item instanceof Space || item instanceof Building) {
@@ -310,35 +287,30 @@ class AcousticRatingCalculator {
     return rooms
   }
 
-  getAcousticRatingLevel(parentIds: string[]): AcousticRatingLevelReq {
+  getAcousticRatingLevelFromParentZone(
+    parentIds: string[],
+  ): AcousticRatingLevel {
     for (const parentId of parentIds) {
       for (const item of this.items) {
         if (item.id === parentId) {
           if (item instanceof Zone) {
-            return item.acousticRatingLevelReq
+            return item.acousticRatingLevel
           }
           if (item.parentIds && item.parentIds.length) {
-            return this.getAcousticRatingLevel(item.parentIds)
+            return this.getAcousticRatingLevelFromParentZone(item.parentIds)
           }
         }
       }
     }
   }
-
-  //
-  // calculateAirborneAcousticRatingCtrReq() {}
-  //
-  // calculateFootstepAcousticRatingCReq() {}
-  //
-  // calculateFootstepAcousticRatingCtrReq() {}
 }
 
-// const acousticRatingCalculator = new AcousticRatingCalculator()
-// const output = acousticRatingCalculator.calculate()
-
 export {
+  PREDEFINED_TYPE_ROOF,
+  PREDEFINED_TYPE_BASESLAB,
+  PREDEFINED_TYPE_FLOOR,
+  ALL_PREDEFINED_TYPES,
   AcousticRatingCalculator,
-  AcousticRatingLevelReq,
   CelestialDirection,
   Surface,
   Item,
@@ -354,11 +326,7 @@ export {
   Zone,
   Name,
   OccupancyType,
-  OutputComponent,
-  PREDEFINED_TYPE_ROOF,
-  PREDEFINED_TYPE_BASESLAB,
-  PREDEFINED_TYPE_FLOOR,
-  ALL_PREDEFINED_TYPES,
+  OutputItem,
   PredefinedType,
   Status,
 }
