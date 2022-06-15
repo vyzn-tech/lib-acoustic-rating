@@ -83,6 +83,8 @@ class Surface extends Item {
   airborneAcousticRatingInternal: number
   decibelSender: number
   decibelReceiver: number
+  lrDay: number
+  lrNight: number
 }
 
 class Wall extends Surface {}
@@ -192,10 +194,11 @@ class AcousticRatingCalculator {
   determineAcousticRatingToExternalSources() {
     for (const item of this.items) {
       if (
-        item instanceof Wall ||
-        item instanceof Slab ||
-        item instanceof FlatRoof ||
-        item instanceof Roof
+        (item instanceof Wall ||
+          item instanceof Slab ||
+          item instanceof FlatRoof ||
+          item instanceof Roof) &&
+        item.isExternal == true
       ) {
         const possibleParentRooms = this.filterForSpace(this.items)
         const parentRoom = this.getFirstParentRoom(
@@ -203,9 +206,6 @@ class AcousticRatingCalculator {
           possibleParentRooms,
         )
         const acousticRatingLevel = this.getAcousticRatingLevel(item.parentIds)
-        // console.log("===================")
-        // console.log(item)
-        // console.log(parentRoom)
         if (parentRoom.noiseSensitivity === NOISE_SENSITIVITY_NONE) {
           item.decibelReceiver = 0
           continue
@@ -221,14 +221,13 @@ class AcousticRatingCalculator {
             item.externalAcousticRatingNight,
           )
 
-        // console.log('id: ' + item.id)
-        // console.log('day: ' + lrDay)
-        // console.log('night: ' + lrNight)
         if (acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
           lrDay += 3
           lrNight += 3
-          // console.log('extra: true')
         }
+
+        item.lrDay = lrDay
+        item.lrNight = lrNight
       }
     }
   }
@@ -292,9 +291,6 @@ class AcousticRatingCalculator {
         if (item.id === parentId) {
           return item
         }
-        if (item.parentIds && item.parentIds.length > 0) {
-          return this.getFirstParentRoom(item.parentIds, items)
-        }
       }
     }
   }
@@ -303,14 +299,11 @@ class AcousticRatingCalculator {
     parentIds: string[],
     items: (Space | Building)[],
   ): (Space | Building)[] {
-    let rooms: (Space | Building)[] = []
+    const rooms: (Space | Building)[] = []
     for (const parentId of parentIds) {
       for (const item of items) {
         if (item.id === parentId) {
           rooms.push(item)
-        }
-        if (item.parentIds && item.parentIds.length > 0) {
-          rooms = rooms.concat(this.getParentRooms(item.parentIds, items))
         }
       }
     }
@@ -318,14 +311,15 @@ class AcousticRatingCalculator {
   }
 
   getAcousticRatingLevel(parentIds: string[]): AcousticRatingLevelReq {
-    const filteredItems: Zone[] = this.filterForZone(this.items)
     for (const parentId of parentIds) {
-      for (const item of filteredItems) {
+      for (const item of this.items) {
         if (item.id === parentId) {
-          return item.acousticRatingLevelReq
-        }
-        if (item.parentIds && item.parentIds.length) {
-          return this.getAcousticRatingLevel(item.parentIds)
+          if (item instanceof Zone) {
+            return item.acousticRatingLevelReq
+          }
+          if (item.parentIds && item.parentIds.length) {
+            return this.getAcousticRatingLevel(item.parentIds)
+          }
         }
       }
     }
