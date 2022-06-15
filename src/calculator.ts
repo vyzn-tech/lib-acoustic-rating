@@ -47,22 +47,35 @@ type OccupancyType =
   | 'Terrasse'
 
 abstract class Item {
-  id: string
-  parentIds: string[]
+  constructor(public id: string, public parentIds: string[]) {}
 }
 
 class Surface extends Item {
-  isExternal: boolean
-  celestialDirection: CelestialDirection
   externalAcousticRating: ExternalAcousticRating
   airborneAcousticRatingToExternal: AirborneAcousticRatingToExternal
   airborneAcousticRatingToInternal: AirborneAcousticRatingToInternal
+  constructor(
+    public id: string,
+    public parentIds: string[],
+    public isExternal: boolean,
+    public celestialDirection: CelestialDirection,
+  ) {
+    super(id, parentIds)
+  }
 }
 
 class Wall extends Surface {}
 
 class Slab extends Surface {
-  predefinedType: PredefinedType
+  constructor(
+    public id: string,
+    public parentIds: string[],
+    public isExternal: boolean,
+    public celestialDirection: CelestialDirection,
+    public predefinedType: PredefinedType,
+  ) {
+    super(id, parentIds, isExternal, celestialDirection)
+  }
 }
 
 class Door extends Surface {}
@@ -72,31 +85,53 @@ class Roof extends Surface {}
 class FlatRoof extends Surface {}
 
 class NeighbourBuilding extends Item {
-  occupancyType: OccupancyType
   noiseSensitivity: NoiseSensitivity
   airborneNoiseExposure: NoiseExposure
   footstepNoiseExposure: NoiseExposure
+  constructor(public id: string, public parentIds: string[], public occupancyType: OccupancyType) {
+    super(id, parentIds)
+  }
 }
 
 class Space extends NeighbourBuilding {
-  centerOfGravityZ: number
+  constructor(
+    public id: string,
+    public parentIds: string[],
+    public occupancyType: OccupancyType,
+    public centerOfGravityZ: number,
+  ) {
+    super(id, parentIds, occupancyType)
+  }
 }
 
 class Building extends Item {
-  name: Name
-  status: Status
+  constructor(public id: string, public parentIds: string[], public name: Name, public status: Status) {
+    super(id, parentIds)
+  }
 }
 
 class Zone extends Building {
-  acousticRatingLevel: AcousticRatingLevel
+  constructor(
+    public id: string,
+    public parentIds: string[],
+    public name: Name,
+    public status: Status,
+    public acousticRatingLevel: AcousticRatingLevel,
+  ) {
+    super(id, parentIds, name, status)
+  }
 }
 
 class OutputItem {
-  id: string
-  airborneAcousticRatingCReq: number
-  airborneAcousticRatingCtrReq: number
-  footstepAcousticRatingCReq: number
-  footstepAcousticRatingCtrReq: number
+  constructor(
+    public id: string,
+    public airborneAcousticRatingCReq: number,
+    public airborneAcousticRatingCtrReq: number,
+    public footstepAcousticRatingCReq: number,
+    public footstepAcousticRatingCtrReq: number,
+    public warning: string,
+    public error: string,
+  ) {}
 }
 
 class ExternalAcousticRating {
@@ -129,22 +164,24 @@ class AcousticRatingCalculator {
   }
 
   public calculate(): OutputItem[] {
-    let output: OutputItem[] = []
+    const output: OutputItem[] = []
     this.setExternalAcousticRating()
     this.determineNoiseSensitivityAndExposure()
     this.determineAcousticRatingToExternalSources()
     this.determineAcousticRatingToInternalSources()
     for (const item of this.items) {
       if (item instanceof Surface) {
-        output.push(new OutputItem(
-          item.id,
-          AcousticRatingCalculator.getMaxAirborneAcousticRating(item),
-          null,
-          null,
-          null,
-          null,
-          null
-        ))
+        output.push(
+          new OutputItem(
+            item.id,
+            AcousticRatingCalculator.getMaxAirborneAcousticRating(item),
+            null,
+            null,
+            null,
+            null,
+            null,
+          ),
+        )
       }
     }
     return output
@@ -222,10 +259,7 @@ class AcousticRatingCalculator {
   private static getMaxAirborneAcousticRating(surface: Surface) {
     let maxInternal = 0
     if (surface.airborneAcousticRatingToInternal) {
-      maxInternal = Math.max(
-        surface.airborneAcousticRatingToInternal.di1,
-        surface.airborneAcousticRatingToInternal.di2
-      )
+      maxInternal = Math.max(surface.airborneAcousticRatingToInternal.di1, surface.airborneAcousticRatingToInternal.di2)
     }
 
     let maxExternal = 0
@@ -233,12 +267,12 @@ class AcousticRatingCalculator {
       maxExternal = Math.max(
         surface.airborneAcousticRatingToExternal.de,
         surface.airborneAcousticRatingToExternal.lrDay,
-        surface.airborneAcousticRatingToExternal.lrNight
+        surface.airborneAcousticRatingToExternal.lrNight,
       )
     }
 
     const maximum = Math.max(maxInternal, maxExternal)
-    return maximum > 0 ? maximum: null
+    return maximum > 0 ? maximum : null
   }
 
   private getFirstInternalConnectedSpace(parentIds: string[]): Space {
