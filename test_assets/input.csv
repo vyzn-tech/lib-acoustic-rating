@@ -1,0 +1,74 @@
+GUID,Entity,PredefinedType,ParentIds,Name,AcousticRatingLevelReq,Status,IsExternal,OccupancyType,CelestialDirection,CenterOfGravityZ
+1,IfcWall,,47,,,,TRUE,,NE,
+2,IfcWall,,51,,,,TRUE,,NE,
+3,IfcWall,,"47,54",,,,TRUE,,NE,
+4,IfcWall,,"48,54",,,,TRUE,,N,
+5,IfcWall,,"47,52",,,,FALSE,,N,
+6,IfcWall,,"46,47",,,,FALSE,,N,
+7,IfcWall,,"47,53",,,,FALSE,,N,
+8,IfcWall,,"47,55",,,,FALSE,,N,
+9,IfcWall,,"50,55",,,,FALSE,,N,
+10,IfcWall,,"46,55",,,,FALSE,,N,
+11,IfcWall,,"51,50",,,,FALSE,,N,
+12,IfcWall,,"51,49",,,,FALSE,,N,
+13,IfcWall,,"51,48",,,,FALSE,,N,
+14,IfcWall,,"53,49",,,,FALSE,,N,
+15,IfcWall,,"47,73",,,,FALSE,,N,
+16,IfcWall,,"55,73",,,,FALSE,,N,
+17,IfcWall,,"53,73",,,,FALSE,,N,
+18,IfcWall,,"64,51",,,,FALSE,,N,
+19,IfcWall,,"57,59",,,,TRUE,,NE,
+20,IfcSlab,FLOOR,"56,62",,,,FALSE,,,
+21,IfcSlab,FLOOR,"58,62",,,,FALSE,,,
+22,IfcSlab,FLOOR,"59,62",,,,FALSE,,,
+23,IfcSlab,FLOOR,"60,62",,,,FALSE,,,
+24,IfcSlab,FLOOR,"55,62",,,,FALSE,,,
+25,IfcSlab,FLOOR,"56,63",,,,FALSE,,,
+26,IfcSlab,FLOOR,"56,46",,,,FALSE,,,
+27,IfcSlab,,"48,62",,,,FALSE,,,
+28,IfcSlab,FLOOR,"49,62",,,,FALSE,,,
+29,IfcSlab,FLOOR,"50,57",,,,FALSE,,,
+30,IfcSlab,ROOF,"46,55",,,,TRUE,,N,
+31,IfcSlab,ROOF,"46,52",,,,TRUE,,N,
+32,IfcSlab,FLOOR,"48,53",,,,FALSE,,,
+33,IfcSlab,FLOOR,"47,58",,,,FALSE,,,
+34,IfcSlab,FLOOR,"50,63",,,,FALSE,,,
+35,IfcRoof,FLOOR,"47,65",,,,FALSE,,,
+36,IfcRoof,FLOOR,"47,51",,,,FALSE,,,
+37,IfcRoof,FLOOR,"61,63",,,,FALSE,,,
+38,IfcRoof,FLOOR,"58,64",,,,FALSE,,,
+39,IfcRoof,FLOOR,"58,65",,,,FALSE,,,
+40,IfcRoof,FLOOR,"52,57",,,,TRUE,,,
+41,IfcSlab,ROOF,"46,62",,,,TRUE,,NE,
+42,IfcDoor,,1,,,,TRUE,,N,
+43,IfcSlab,ROOF,46,,,,TRUE,,N,
+44,IfcRoof,,47,,,,TRUE,,N,
+45,IfcSpace,,70,,,,,Wartungsarbeiten,,7
+46,IfcSpace,,66,,,,,Terrasse,,6
+47,IfcSpace,,66,,,,,Wohnen,,6.5
+48,IfcSpace,,66,,,,,Wohnen,,6.5
+49,IfcSpace,,66,,,,,Bad,,6.5
+50,IfcSpace,,66,,,,,Schlafen,,6.5
+51,IfcSpace,,71,,,,,Treppenhaus,,6.4
+52,IfcSpace,,67,,,,,Wohnen,,3.5
+53,IfcSpace,,67,,,,,Bad,,3.5
+54,IfcSpace,,67,,,,,Terrasse,,3.5
+55,IfcSpace,,67,,,,,Schlafen,,3.5
+56,IfcSpace,,68,,,,,Tiefgarage,,-3
+57,IfcSpace,,69,,,,,Einfahrt,,-3
+58,IfcSpace,,68,,,,,Gewerbe,,-3
+59,IfcSpace,,68,,,,,Keller,,-3
+60,IfcSpace,,68,,,,,Technik,,-3
+61,IfcSpace,,68,,,,,Waschraum,,-6
+62,IfcSpace,,69,,,,,Tiefgarage,,-6
+63,IfcSpace,,69,,,,,Gewerbe,,-6
+64,IfcSpace,,69,,,,,Keller,,-6
+65,IfcSpace,,69,,,,,Technik,,-6
+66,IfcZone,,72,Nutzungseinheit_1,Erhoehte Anforderungen,new,,,,
+67,IfcZone,,72,Nutzungseinheit_2,Erhoehte Anforderungen,new,,,,
+68,IfcZone,,72,Nutzungseinheit_3,Erhoehte Anforderungen,new,,,,
+69,IfcZone,,72,Nutzungseinheit_4,Erhoehte Anforderungen,new,,,,
+70,IfcZone,,72,Dach,Erhoehte Anforderungen,new,,,,
+71,IfcZone,,72,Fluchtweg_1,Minimale Anforderungen,new,,,,
+72,IfcBuilding,,,Bauprojekt,,new,,,,
+73,IfcBuilding,,,Nachbargebäude,,existing,,Wohnen,,

@@ -1,11 +1,37 @@
-import { AcousticRatingCalculator, ExternalAcousticRating, Item } from '../src/calculator'
+import { AcousticRatingCalculator } from './calculator'
+import { ExternalAcousticRating, ExternalAcousticRatingCollection } from './external-acoustic-rating'
 
-describe('test_test', () => {
-  test('just a test for testing tests', () => {
-    const items: Item[] = []
-    const externalAcousticRating: ExternalAcousticRating = new ExternalAcousticRating()
-    const calculator = new AcousticRatingCalculator(items, externalAcousticRating)
+import * as fs from 'fs'
+import CsvConverter from './csv-converter'
 
-    expect(calculator.calculate()).toEqual('tests are working')
-  })
+describe('tests calculation result', () => {
+  const externalAcousticRatingCollection: ExternalAcousticRatingCollection = new ExternalAcousticRatingCollection(
+    new ExternalAcousticRating(62, 55),
+    new ExternalAcousticRating(62, 55),
+    new ExternalAcousticRating(0, 0),
+    new ExternalAcousticRating(0, 0),
+    new ExternalAcousticRating(0, 0),
+    new ExternalAcousticRating(0, 0),
+    new ExternalAcousticRating(0, 0),
+    new ExternalAcousticRating(0, 0),
+  )
+  const inputCSVString = fs.readFileSync('test_assets/input.csv').toString('utf8')
+  const validResultJson = fs.readFileSync('test_assets/valid_result.json').toString('utf8')
+  const validResultItems = JSON.parse(validResultJson)
+
+  const components = new CsvConverter().convertToComponents(inputCSVString)
+  const calculator = new AcousticRatingCalculator(components, externalAcousticRatingCollection)
+  const calculationResult = calculator.calculate()
+
+  for (const [index, validResultItem] of validResultItems.entries()) {
+    test('airborneAcousticRatingCReq test for id ' + validResultItem.id, () => {
+      expect(calculationResult[index].airborneAcousticRatingCReq).toEqual(validResultItem.airborneAcousticRatingCReq)
+    })
+  }
+
+  for (const [index, validResultItem] of validResultItems.entries()) {
+    test('footstepAcousticRatingCReq test for id ' + validResultItem.id, () => {
+      expect(calculationResult[index].footstepAcousticRatingCReq).toEqual(validResultItem.footstepAcousticRatingCReq)
+    })
+  }
 })

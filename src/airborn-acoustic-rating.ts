@@ -11,25 +11,22 @@ import {
   NOISE_EXPOSURE_VERY_HIGH,
   NoiseExposure,
 } from './noise-exposure'
-import { ExternalAcousticRating, NeighbourBuilding, Space } from './calculator'
+import { NeighbourBuilding, Space } from './components'
+import { ACOUSTIC_RATING_LEVEL_ENHANCED, AcousticRatingLevel } from './acoustic-rating-level'
+import { ExternalAcousticRating } from './external-acoustic-rating'
 
-const ACOUSTIC_RATING_LEVEL_MINIMUM = 'Mindestanforderungen'
-const ACOUSTIC_RATING_LEVEL_ENHANCED = 'Erhoehte Anforderungen'
-const ACOUSTIC_RATING_LEVELS = <const>[ACOUSTIC_RATING_LEVEL_MINIMUM, ACOUSTIC_RATING_LEVEL_ENHANCED]
-type AcousticRatingLevel = typeof ACOUSTIC_RATING_LEVELS[number]
+const ACOUSTIC_RATING_LIMIT_LOW = 52
+const ACOUSTIC_RATING_LIMIT_HIGH = 60
 
-const ACOUSTIC_RATING_LEVEL_LIMIT_LOW = 52
-const ACOUSTIC_RATING_LEVEL_LIMIT_HIGH = 60
+const ACOUSTIC_RATING_PERIOD_DAY = 'day'
+const ACOUSTIC_RATING_PERIOD_NIGHT = 'night'
+const ACOUSTIC_RATING_PERIODS = <const>[ACOUSTIC_RATING_PERIOD_DAY, ACOUSTIC_RATING_PERIOD_NIGHT]
+type AcousticRatingPeriod = typeof ACOUSTIC_RATING_PERIODS[number]
 
-const ACOUSTIC_RATING_LEVEL_PERIOD_DAY = 'day'
-const ACOUSTIC_RATING_LEVEL_PERIOD_NIGHT = 'night'
-const ACOUSTIC_RATING_LEVEL_PERIODS = <const>[ACOUSTIC_RATING_LEVEL_PERIOD_DAY, ACOUSTIC_RATING_LEVEL_PERIOD_NIGHT]
-type AcousticRatingPeriod = typeof ACOUSTIC_RATING_LEVEL_PERIODS[number]
-
-const ACOUSTIC_RATING_LEVEL_TYPE_INDOOR = 'indoor'
-const ACOUSTIC_RATING_LEVEL_TYPE_OUTDOOR = 'outdoor'
-const ACOUSTIC_RATING_LEVEL_TYPES = <const>[ACOUSTIC_RATING_LEVEL_TYPE_INDOOR, ACOUSTIC_RATING_LEVEL_TYPE_OUTDOOR]
-type AcousticRatingType = typeof ACOUSTIC_RATING_LEVEL_TYPES[number]
+const ACOUSTIC_RATING_TYPE_INDOOR = 'indoor'
+const ACOUSTIC_RATING_TYPE_OUTDOOR = 'outdoor'
+const ACOUSTIC_RATING_TYPES = <const>[ACOUSTIC_RATING_TYPE_INDOOR, ACOUSTIC_RATING_TYPE_OUTDOOR]
+type AcousticRatingType = typeof ACOUSTIC_RATING_TYPES[number]
 
 const INDOOR_MAP = {
   [NOISE_SENSITIVITY_LOW]: {
@@ -54,77 +51,75 @@ const INDOOR_MAP = {
 
 const OUTDOOR_MAP = {
   [NOISE_SENSITIVITY_LOW]: {
-    [ACOUSTIC_RATING_LEVEL_PERIOD_DAY]: {
-      [ACOUSTIC_RATING_LEVEL_LIMIT_LOW]: 22,
-      [ACOUSTIC_RATING_LEVEL_LIMIT_HIGH]: 38,
+    [ACOUSTIC_RATING_PERIOD_DAY]: {
+      [ACOUSTIC_RATING_LIMIT_LOW]: 22,
+      [ACOUSTIC_RATING_LIMIT_HIGH]: 38,
     },
-    [ACOUSTIC_RATING_LEVEL_PERIOD_NIGHT]: {
-      [ACOUSTIC_RATING_LEVEL_LIMIT_LOW]: 22,
-      [ACOUSTIC_RATING_LEVEL_LIMIT_HIGH]: 30,
+    [ACOUSTIC_RATING_PERIOD_NIGHT]: {
+      [ACOUSTIC_RATING_LIMIT_LOW]: 22,
+      [ACOUSTIC_RATING_LIMIT_HIGH]: 30,
     },
   },
   [NOISE_SENSITIVITY_MODERATE]: {
-    [ACOUSTIC_RATING_LEVEL_PERIOD_DAY]: {
-      [ACOUSTIC_RATING_LEVEL_LIMIT_LOW]: 27,
-      [ACOUSTIC_RATING_LEVEL_LIMIT_HIGH]: 33,
+    [ACOUSTIC_RATING_PERIOD_DAY]: {
+      [ACOUSTIC_RATING_LIMIT_LOW]: 27,
+      [ACOUSTIC_RATING_LIMIT_HIGH]: 33,
     },
-    [ACOUSTIC_RATING_LEVEL_PERIOD_NIGHT]: {
-      [ACOUSTIC_RATING_LEVEL_LIMIT_LOW]: 27,
-      [ACOUSTIC_RATING_LEVEL_LIMIT_HIGH]: 25,
+    [ACOUSTIC_RATING_PERIOD_NIGHT]: {
+      [ACOUSTIC_RATING_LIMIT_LOW]: 27,
+      [ACOUSTIC_RATING_LIMIT_HIGH]: 25,
     },
   },
   [NOISE_SENSITIVITY_HIGH]: {
-    [ACOUSTIC_RATING_LEVEL_PERIOD_DAY]: {
-      [ACOUSTIC_RATING_LEVEL_LIMIT_LOW]: 32,
-      [ACOUSTIC_RATING_LEVEL_LIMIT_HIGH]: 28,
+    [ACOUSTIC_RATING_PERIOD_DAY]: {
+      [ACOUSTIC_RATING_LIMIT_LOW]: 32,
+      [ACOUSTIC_RATING_LIMIT_HIGH]: 28,
     },
-    [ACOUSTIC_RATING_LEVEL_PERIOD_NIGHT]: {
-      [ACOUSTIC_RATING_LEVEL_LIMIT_LOW]: 32,
-      [ACOUSTIC_RATING_LEVEL_LIMIT_HIGH]: 20,
+    [ACOUSTIC_RATING_PERIOD_NIGHT]: {
+      [ACOUSTIC_RATING_LIMIT_LOW]: 32,
+      [ACOUSTIC_RATING_LIMIT_HIGH]: 20,
     },
   },
 }
 
 class AirborneAcousticRatingToExternal {
-  constructor(public lrDay: number, public lrNight: number, public de: number) {}
+  constructor(public requirementDay: number, public requirementNight: number) {}
 }
 
 class AirborneAcousticRatingToInternal {
-  constructor(public di1: number, public di2: number) {}
+  constructor(public requirementDirectionOne: number, public requirementDirectionTwo: number) {}
 }
 
 class AirborneAcousticRatingUtil {
   public getAirborneAcousticRatingTowardsExternalSources(
-    noiseSensitivity: NoiseSensitivity,
+    space: Space,
     externalAcousticRating: ExternalAcousticRating,
-    acousticRatingLevel: AcousticRatingLevel,
   ): AirborneAcousticRatingToExternal {
     let lrDay = AirborneAcousticRatingUtil.getOutdoorAcousticRating(
-      ACOUSTIC_RATING_LEVEL_PERIOD_DAY,
-      noiseSensitivity,
+      ACOUSTIC_RATING_PERIOD_DAY,
+      space.noiseSensitivity,
       externalAcousticRating,
     )
     let lrNight = AirborneAcousticRatingUtil.getOutdoorAcousticRating(
-      ACOUSTIC_RATING_LEVEL_PERIOD_NIGHT,
-      noiseSensitivity,
+      ACOUSTIC_RATING_PERIOD_NIGHT,
+      space.noiseSensitivity,
       externalAcousticRating,
     )
 
-    if (acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
+    if (space.acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
       lrDay = AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
         lrDay,
-        acousticRatingLevel,
-        ACOUSTIC_RATING_LEVEL_TYPE_OUTDOOR,
+        space.acousticRatingLevel,
+        ACOUSTIC_RATING_TYPE_OUTDOOR,
       )
       lrNight = AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
         lrNight,
-        acousticRatingLevel,
-        ACOUSTIC_RATING_LEVEL_TYPE_OUTDOOR,
+        space.acousticRatingLevel,
+        ACOUSTIC_RATING_TYPE_OUTDOOR,
       )
     }
 
-    //@todo figure out why we need "de"
-    return new AirborneAcousticRatingToExternal(lrDay, lrNight, 0)
+    return new AirborneAcousticRatingToExternal(lrDay, lrNight)
   }
 
   private static getOutdoorAcousticRating(
@@ -133,44 +128,56 @@ class AirborneAcousticRatingUtil {
     externalAcousticRating: ExternalAcousticRating,
   ) {
     const noiseSensitivityMap = OUTDOOR_MAP[noiseSensitivity][period]
-    if (externalAcousticRating[period] <= ACOUSTIC_RATING_LEVEL_LIMIT_HIGH) {
-      return noiseSensitivityMap[ACOUSTIC_RATING_LEVEL_LIMIT_LOW]
+    if (!externalAcousticRating) {
+      return noiseSensitivityMap[ACOUSTIC_RATING_LIMIT_LOW]
     }
-    return noiseSensitivityMap[ACOUSTIC_RATING_LEVEL_LIMIT_HIGH]
+    if (externalAcousticRating[period] <= ACOUSTIC_RATING_LIMIT_HIGH) {
+      return noiseSensitivityMap[ACOUSTIC_RATING_LIMIT_LOW]
+    }
+    return noiseSensitivityMap[ACOUSTIC_RATING_LIMIT_HIGH]
   }
 
   public getAirborneAcousticRatingTowardsInternalSources(
     spaces: (Space | NeighbourBuilding)[],
-    acousticRatingLevel: AcousticRatingLevel,
   ): AirborneAcousticRatingToInternal {
     if (spaces.length != 2) {
       throw RangeError('There are two spaces required!')
     }
 
+    const spaceLeft = spaces[0]
+    const spaceRight = spaces[1]
+
     let di1 = 0
     let di2 = 0
-    if (spaces[0].noiseSensitivity && spaces[1].airborneNoiseExposure) {
+
+    if (spaceLeft.noiseSensitivity && spaceRight.airborneNoiseExposure) {
       di1 = AirborneAcousticRatingUtil.getIndoorAcousticRating(
-        spaces[0].noiseSensitivity,
-        spaces[1].airborneNoiseExposure,
+        spaceLeft.noiseSensitivity,
+        spaceRight.airborneNoiseExposure,
       )
-      di1 = AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
-        di1,
-        acousticRatingLevel,
-        ACOUSTIC_RATING_LEVEL_TYPE_INDOOR,
-      )
+      console.log(di2)
+      if (spaceLeft.constructor == Space) {
+        di1 = AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
+          di1,
+          spaceLeft.acousticRatingLevel,
+          ACOUSTIC_RATING_TYPE_INDOOR,
+        )
+      }
     }
 
-    if (spaces[1].noiseSensitivity && spaces[0].airborneNoiseExposure) {
+    if (spaceRight.noiseSensitivity && spaceLeft.airborneNoiseExposure) {
       di2 = AirborneAcousticRatingUtil.getIndoorAcousticRating(
-        spaces[1].noiseSensitivity,
-        spaces[0].airborneNoiseExposure,
+        spaceRight.noiseSensitivity,
+        spaceLeft.airborneNoiseExposure,
       )
-      di2 = AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
-        di2,
-        acousticRatingLevel,
-        ACOUSTIC_RATING_LEVEL_TYPE_INDOOR,
-      )
+      console.log(di2)
+      if (spaceRight.constructor == Space) {
+        di2 = AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
+          di2,
+          spaceRight.acousticRatingLevel,
+          ACOUSTIC_RATING_TYPE_INDOOR,
+        )
+      }
     }
 
     return new AirborneAcousticRatingToInternal(di1, di2)
@@ -185,22 +192,14 @@ class AirborneAcousticRatingUtil {
     acousticRatingLevel: AcousticRatingLevel,
     type: AcousticRatingType,
   ) {
-    if (type === ACOUSTIC_RATING_LEVEL_TYPE_OUTDOOR && acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
+    if (type === ACOUSTIC_RATING_TYPE_OUTDOOR && acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
       return value + 3
     }
-    if (type === ACOUSTIC_RATING_LEVEL_TYPE_INDOOR && acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
+    if (type === ACOUSTIC_RATING_TYPE_INDOOR && acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
       return value + 4
     }
     return value
   }
 }
 
-export {
-  ACOUSTIC_RATING_LEVEL_MINIMUM,
-  ACOUSTIC_RATING_LEVEL_ENHANCED,
-  ACOUSTIC_RATING_LEVELS,
-  AcousticRatingLevel,
-  AirborneAcousticRatingToExternal,
-  AirborneAcousticRatingToInternal,
-  AirborneAcousticRatingUtil,
-}
+export { AirborneAcousticRatingToExternal, AirborneAcousticRatingToInternal, AirborneAcousticRatingUtil }
