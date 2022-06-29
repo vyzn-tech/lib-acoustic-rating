@@ -178,11 +178,9 @@ class AcousticRatingCalculator {
       return component instanceof Slab || component instanceof FlatRoof
     }
     const filteredSlabs: (Slab | FlatRoof)[] = this.items.filter(filter)
-
     for (const filteredSlab of filteredSlabs) {
       if (filteredSlab.parentIds && filteredSlab.parentIds.length == 2) {
         const connectedSpaces = this.getConnectedSpaces(filteredSlab.parentIds)
-
         filteredSlab.footstepAcousticRating = this.footstepAcousticRatingUtil.getFootstepAcousticRating(connectedSpaces)
       }
     }
