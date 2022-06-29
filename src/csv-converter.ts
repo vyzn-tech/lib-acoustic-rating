@@ -105,7 +105,7 @@ class CsvConverter {
       row[CSV_KEY_ID],
       this.getParentIds(row),
       row[CSV_KEY_OCCUPANCY_TYPE],
-      parseInt(row[CSV_KEY_CENTER_OF_GRAVITY_Z]),
+      parseFloat(row[CSV_KEY_CENTER_OF_GRAVITY_Z]),
     )
   }
 
