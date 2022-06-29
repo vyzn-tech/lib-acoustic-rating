@@ -11,7 +11,7 @@ import {
   NOISE_EXPOSURE_VERY_HIGH,
   NoiseExposure,
 } from './noise-exposure'
-import { NeighbourBuilding, Space } from './components'
+import { Building, NeighbourBuilding, Space } from './components'
 import { ACOUSTIC_RATING_LEVEL_ENHANCED, AcousticRatingLevel } from './acoustic-rating-level'
 import { ExternalAcousticRating } from './external-acoustic-rating'
 
@@ -150,12 +150,11 @@ class AirborneAcousticRatingUtil {
     let di1 = 0
     let di2 = 0
 
-    if (spaceLeft.noiseSensitivity && spaceRight.airborneNoiseExposure) {
+    if (spaceLeft.noiseSensitivity && spaceRight.airborneNoiseExposure && spaceRight.constructor != Building) {
       di1 = AirborneAcousticRatingUtil.getIndoorAcousticRating(
         spaceLeft.noiseSensitivity,
         spaceRight.airborneNoiseExposure,
       )
-      console.log(di2)
       if (spaceLeft.constructor == Space) {
         di1 = AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
           di1,
@@ -165,12 +164,11 @@ class AirborneAcousticRatingUtil {
       }
     }
 
-    if (spaceRight.noiseSensitivity && spaceLeft.airborneNoiseExposure) {
+    if (spaceRight.noiseSensitivity && spaceLeft.airborneNoiseExposure && spaceLeft.constructor != Building) {
       di2 = AirborneAcousticRatingUtil.getIndoorAcousticRating(
         spaceRight.noiseSensitivity,
         spaceLeft.airborneNoiseExposure,
       )
-      console.log(di2)
       if (spaceRight.constructor == Space) {
         di2 = AirborneAcousticRatingUtil.increaseValueIfAcousticRatingLevelEnhanced(
           di2,
