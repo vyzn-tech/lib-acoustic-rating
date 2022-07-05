@@ -11,9 +11,13 @@ import {
   NOISE_EXPOSURE_VERY_HIGH,
   NoiseExposureUtil,
 } from './noise-exposure'
-import { Space } from './components'
+import { OCCUPANCY_TYPE_BALCONY, OPERATING_STATE_EXISTING, Space } from './components'
 import { ACOUSTIC_RATING_LEVEL_ENHANCED } from './acoustic-rating-level'
 import { AcousticRatingRequirement } from './acoustic-rating-requirement'
+
+const FOOTSTEP_ACOUSTIC_RATING_REDUCTION_ENHANCED_RATING_LEVEL = 4
+const FOOTSTEP_ACOUSTIC_RATING_REDUCTION_EXISTING_BUILDING = 2
+const FOOTSTEP_ACOUSTIC_RATING_REDUCTION_BALCONY = 5
 
 const MAP = {
   [NOISE_SENSITIVITY_LOW]: {
@@ -61,15 +65,15 @@ class FootstepAcousticRatingUtil {
     const requirement: number = MAP[bottomSpace.noiseSensitivity][topSpace.footstepNoiseExposure]
     let reduction = 0
     if (bottomSpace.acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
-      reduction += 4
+      reduction += FOOTSTEP_ACOUSTIC_RATING_REDUCTION_ENHANCED_RATING_LEVEL
     }
 
-    if (bottomSpace.operatingState === 'existing') {
-      reduction += 2
+    if (bottomSpace.operatingState === OPERATING_STATE_EXISTING) {
+      reduction += FOOTSTEP_ACOUSTIC_RATING_REDUCTION_EXISTING_BUILDING
     }
 
-    if (topSpace.occupancyType === 'Balkon') {
-      reduction += 5
+    if (topSpace.occupancyType === OCCUPANCY_TYPE_BALCONY) {
+      reduction += FOOTSTEP_ACOUSTIC_RATING_REDUCTION_BALCONY
     }
 
     return new AcousticRatingRequirement(
