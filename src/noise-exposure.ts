@@ -14,6 +14,16 @@ interface NoiseExposureMap {
   [name: string]: NoiseExposure
 }
 
+const SPECTRUM_ADJUSTMENT_TYPE_C = 'c'
+const SPECTRUM_ADJUSTMENT_TYPE_CTR = 'ctr'
+
+const SPECTRUM_ADJUSTMENT_TYPES = <const>[SPECTRUM_ADJUSTMENT_TYPE_C, SPECTRUM_ADJUSTMENT_TYPE_CTR]
+
+type SpectrumAdjustmentType = typeof SPECTRUM_ADJUSTMENT_TYPES[number]
+interface SpectrumAdjustmentTypeMap {
+  [name: string]: SpectrumAdjustmentType
+}
+
 const NOISE_EXPOSURE_MAP_SIA181_2020_AIRBORNE: NoiseExposureMap = {
   Kellerraum: NOISE_EXPOSURE_LOW,
   Leseraum: NOISE_EXPOSURE_LOW,
@@ -60,6 +70,64 @@ const NOISE_EXPOSURE_MAP_SIA181_2020_AIRBORNE: NoiseExposureMap = {
   Werkstatt: NOISE_EXPOSURE_VERY_HIGH,
   Musikübungsraum: NOISE_EXPOSURE_VERY_HIGH,
   Sporthalle: NOISE_EXPOSURE_VERY_HIGH,
+}
+
+const SPECTRUM_ADJUSTMENT_TYPE_MAP_SIA181_2020: SpectrumAdjustmentTypeMap = {
+  Kellerraum: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Leseraum: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Warteraum: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Lagerraum: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Abstellraum: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Archiv: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Veloraum: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Balkon: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Wohnraum: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Schlafraum: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Küche: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Dusche: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Bad: SPECTRUM_ADJUSTMENT_TYPE_C,
+  WC: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Korridor: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Einstellhalle: SPECTRUM_ADJUSTMENT_TYPE_CTR,
+  Treppe: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Laubengang: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Passage: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Terrasse: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Aufzugsmaschinenraum: SPECTRUM_ADJUSTMENT_TYPE_CTR,
+  Aufzugsschacht: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Treppenhaus: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Büroraum: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Sitzungszimmer: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Labor: SPECTRUM_ADJUSTMENT_TYPE_C,
+  'Verkaufsraum ohne Beschallung': SPECTRUM_ADJUSTMENT_TYPE_C,
+  Wintergarten: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Saal: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Schulzimmer: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Kinderkrippe: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Kindergarten: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Technikraum: SPECTRUM_ADJUSTMENT_TYPE_C,
+  'Restaurant ohne Beschallung': SPECTRUM_ADJUSTMENT_TYPE_C,
+  'Verkaufsraum mit Beschallung und dazugehörende Erschliessungsräume': SPECTRUM_ADJUSTMENT_TYPE_CTR,
+  'Einstellhalle mit gewerblicher Nutzung': SPECTRUM_ADJUSTMENT_TYPE_CTR,
+  Gewerbebetrieb: SPECTRUM_ADJUSTMENT_TYPE_CTR,
+  'Restaurant mit Beschallung und dazugehörende Erschliessungsräume': SPECTRUM_ADJUSTMENT_TYPE_CTR,
+  Werkstatt: SPECTRUM_ADJUSTMENT_TYPE_CTR,
+  Musikübungsraum: SPECTRUM_ADJUSTMENT_TYPE_CTR,
+  Sporthalle: SPECTRUM_ADJUSTMENT_TYPE_C,
+}
+
+const SPECTRUM_ADJUSTMENT_TYPE_MAP_SEESTRASSE: SpectrumAdjustmentTypeMap = {
+  Keller: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Wohnen: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Schlafen: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Bad: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Tiefgarage: SPECTRUM_ADJUSTMENT_TYPE_CTR,
+  Einfahrt: SPECTRUM_ADJUSTMENT_TYPE_CTR,
+  Terrasse: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Treppenhaus: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Waschraum: SPECTRUM_ADJUSTMENT_TYPE_CTR,
+  Technik: SPECTRUM_ADJUSTMENT_TYPE_C,
+  Gewerbe: SPECTRUM_ADJUSTMENT_TYPE_CTR,
 }
 
 const NOISE_EXPOSURE_MAP_SIA181_2006_AIRBORNE: NoiseExposureMap = {
@@ -165,6 +233,19 @@ class NoiseExposureUtil {
       }
     }
   }
+
+  getSpectrumAdjustmentType(occupancy: string): SpectrumAdjustmentType {
+    const map = {
+      ...SPECTRUM_ADJUSTMENT_TYPE_MAP_SIA181_2020,
+      ...SPECTRUM_ADJUSTMENT_TYPE_MAP_SEESTRASSE,
+    }
+
+    for (const [key, value] of Object.entries(map)) {
+      if (key === occupancy) {
+        return value
+      }
+    }
+  }
 }
 
 export {
@@ -172,6 +253,9 @@ export {
   NOISE_EXPOSURE_MODERATE,
   NOISE_EXPOSURE_HIGH,
   NOISE_EXPOSURE_VERY_HIGH,
+  SPECTRUM_ADJUSTMENT_TYPE_C,
+  SPECTRUM_ADJUSTMENT_TYPE_CTR,
   NoiseExposure,
   NoiseExposureUtil,
+  SpectrumAdjustmentType,
 }

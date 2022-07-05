@@ -1,9 +1,9 @@
 import { AirborneAcousticRatingToExternal, AirborneAcousticRatingToInternal } from './airborn-acoustic-rating'
-import { FootstepAcousticRating } from './footstep-acoustic-rating'
 import { NoiseSensitivity } from './noise-sensitivity'
 import { NoiseExposure } from './noise-exposure'
 import { AcousticRatingLevel } from './acoustic-rating-level'
 import { ExternalAcousticRating } from './external-acoustic-rating'
+import { AcousticRatingRequirement } from './acoustic-rating-requirement'
 
 type CelestialDirection = null | 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW'
 type OperatingState = 'new' | 'temporary' | 'existing' | 'demolish'
@@ -51,7 +51,7 @@ class Surface extends Component {
   externalAcousticRating: ExternalAcousticRating
   airborneAcousticRatingToExternal: AirborneAcousticRatingToExternal
   airborneAcousticRatingToInternal: AirborneAcousticRatingToInternal
-  footstepAcousticRating: FootstepAcousticRating
+  footstepAcousticRating: AcousticRatingRequirement
   constructor(
     public id: string,
     public parentIds: string[],

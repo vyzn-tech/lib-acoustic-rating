@@ -1,5 +1,7 @@
+import { SpectrumAdjustmentType } from './noise-exposure'
+
 class ExternalAcousticRating {
-  constructor(public day: number, public night: number) {}
+  constructor(public day: number, public night: number, public spectrumAdjustmentType: SpectrumAdjustmentType) {}
 }
 
 class ExternalAcousticRatingCollection {

@@ -6,14 +6,14 @@ import CsvConverter from './csv-converter'
 
 describe('tests calculation result', () => {
   const externalAcousticRatingCollection: ExternalAcousticRatingCollection = new ExternalAcousticRatingCollection(
-    new ExternalAcousticRating(62, 55),
-    new ExternalAcousticRating(62, 55),
-    new ExternalAcousticRating(0, 0),
-    new ExternalAcousticRating(0, 0),
-    new ExternalAcousticRating(0, 0),
-    new ExternalAcousticRating(0, 0),
-    new ExternalAcousticRating(0, 0),
-    new ExternalAcousticRating(0, 0),
+    new ExternalAcousticRating(62, 55, 'ctr'),
+    new ExternalAcousticRating(62, 55, 'ctr'),
+    new ExternalAcousticRating(0, 0, 'c'),
+    new ExternalAcousticRating(0, 0, 'c'),
+    new ExternalAcousticRating(0, 0, 'c'),
+    new ExternalAcousticRating(0, 0, 'c'),
+    new ExternalAcousticRating(0, 0, 'c'),
+    new ExternalAcousticRating(0, 0, 'c'),
   )
   const inputCSVString = fs.readFileSync('test_assets/input.csv').toString('utf8')
   const validResultJson = fs.readFileSync('test_assets/valid_result.json').toString('utf8')
@@ -24,14 +24,10 @@ describe('tests calculation result', () => {
   const calculationResult = calculator.calculate()
 
   for (const [index, validResultItem] of validResultItems.entries()) {
-    test('airborneAcousticRatingCReq test for id ' + validResultItem.id, () => {
-      expect(calculationResult[index].airborneAcousticRatingCReq).toEqual(validResultItem.airborneAcousticRatingCReq)
-    })
-  }
-
-  for (const [index, validResultItem] of validResultItems.entries()) {
-    test('footstepAcousticRatingCReq test for id ' + validResultItem.id, () => {
-      expect(calculationResult[index].footstepAcousticRatingCReq).toEqual(validResultItem.footstepAcousticRatingCReq)
-    })
+    if (true) {
+      test('test for id ' + validResultItem.id, () => {
+        expect(calculationResult[index]).toEqual(validResultItem)
+      })
+    }
   }
 })
