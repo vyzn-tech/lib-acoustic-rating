@@ -1,6 +1,11 @@
 import { lowerCase } from 'lodash'
 import { NOISE_SENSITIVITY_NONE, NoiseSensitivityUtil } from './noise-sensitivity'
-import { NoiseExposureUtil } from './noise-exposure'
+import {
+  NoiseExposureUtil,
+  SPECTRUM_ADJUSTMENT_TYPE_C,
+  SPECTRUM_ADJUSTMENT_TYPE_CTR,
+  SpectrumAdjustmentType,
+} from './noise-exposure'
 import { AirborneAcousticRatingUtil } from './airborn-acoustic-rating'
 import { FootstepAcousticRatingUtil } from './footstep-acoustic-rating'
 import { Component, FlatRoof, NeighbourBuilding, Roof, Slab, Space, Surface, Wall, Zone } from './components'
@@ -47,10 +52,10 @@ class AcousticRatingCalculator {
         output.push(
           new OutputItem(
             component.id,
-            AcousticRatingCalculator.getMaxAirborneAcousticRating(component),
-            null,
-            component.footstepAcousticRating ? component.footstepAcousticRating.requirement : null,
-            null,
+            AcousticRatingCalculator.getMaxAirborneAcousticRatingRequirement(component, SPECTRUM_ADJUSTMENT_TYPE_C),
+            AcousticRatingCalculator.getMaxAirborneAcousticRatingRequirement(component, SPECTRUM_ADJUSTMENT_TYPE_CTR),
+            AcousticRatingCalculator.getMaxFootstepAcousticRatingRequirement(component, SPECTRUM_ADJUSTMENT_TYPE_C),
+            AcousticRatingCalculator.getMaxFootstepAcousticRatingRequirement(component, SPECTRUM_ADJUSTMENT_TYPE_CTR),
             null,
             null,
           ),
@@ -168,6 +173,7 @@ class AcousticRatingCalculator {
       const connectedSpaces: (Space | NeighbourBuilding)[] = this.getConnectedSpacesAndNeighbourBuildings(
         surface.parentIds,
       )
+
       surface.airborneAcousticRatingToInternal =
         this.airborneAcousticRatingUtil.getAirborneAcousticRatingTowardsInternalSources(connectedSpaces)
     }
@@ -186,25 +192,44 @@ class AcousticRatingCalculator {
     }
   }
 
-  private static getMaxAirborneAcousticRating(surface: Surface) {
-    let maxInternal = 0
+  private static getMaxAirborneAcousticRatingRequirement(
+    surface: Surface,
+    spectrumAdjustmentType: SpectrumAdjustmentType,
+  ) {
+    const values = []
     if (surface.airborneAcousticRatingToInternal) {
-      maxInternal = Math.max(
-        surface.airborneAcousticRatingToInternal.requirementDirectionOne,
-        surface.airborneAcousticRatingToInternal.requirementDirectionTwo,
-      )
+      for (const requirement of Object.values(surface.airborneAcousticRatingToInternal)) {
+        if (requirement.spectrumAdjustmentType === spectrumAdjustmentType) {
+          values.push(requirement.getValue())
+        }
+      }
     }
 
-    let maxExternal = 0
     if (surface.airborneAcousticRatingToExternal) {
-      maxExternal = Math.max(
-        surface.airborneAcousticRatingToExternal.requirementDay,
-        surface.airborneAcousticRatingToExternal.requirementNight,
-      )
+      for (const requirement of Object.values(surface.airborneAcousticRatingToExternal)) {
+        if (requirement.spectrumAdjustmentType === spectrumAdjustmentType) {
+          values.push(requirement.getValue())
+        }
+      }
     }
 
-    const maximum = Math.max(maxInternal, maxExternal)
+    const maximum = Math.max(...values)
     return maximum > 0 ? maximum : null
+  }
+
+  private static getMaxFootstepAcousticRatingRequirement(
+    surface: Surface,
+    spectrumAdjustmentType: SpectrumAdjustmentType,
+  ) {
+    let value = 0
+    if (
+      surface.footstepAcousticRating &&
+      surface.footstepAcousticRating.spectrumAdjustmentType === spectrumAdjustmentType
+    ) {
+      value = surface.footstepAcousticRating.getValue()
+    }
+
+    return value > 0 ? value : null
   }
 
   private getInternalConnectedSpace(parentIds: string[]): Space {

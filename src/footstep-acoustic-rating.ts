@@ -9,9 +9,11 @@ import {
   NOISE_EXPOSURE_LOW,
   NOISE_EXPOSURE_MODERATE,
   NOISE_EXPOSURE_VERY_HIGH,
+  NoiseExposureUtil,
 } from './noise-exposure'
 import { Space } from './components'
 import { ACOUSTIC_RATING_LEVEL_ENHANCED } from './acoustic-rating-level'
+import { AcousticRatingRequirement } from './acoustic-rating-requirement'
 
 const MAP = {
   [NOISE_SENSITIVITY_LOW]: {
@@ -34,11 +36,10 @@ const MAP = {
   },
 }
 
-class FootstepAcousticRating {
-  constructor(public requirement: number) {}
-}
 class FootstepAcousticRatingUtil {
-  public getFootstepAcousticRating(spaces: Space[]): FootstepAcousticRating {
+  noiseExposureUtil = new NoiseExposureUtil()
+
+  public getFootstepAcousticRating(spaces: Space[]): AcousticRatingRequirement {
     if (spaces.length != 2) {
       throw RangeError('There are two spaces required!')
     }
@@ -54,24 +55,30 @@ class FootstepAcousticRatingUtil {
     }
 
     if (bottomSpace.noiseSensitivity === NOISE_SENSITIVITY_NONE) {
-      return new FootstepAcousticRating(null)
+      return new AcousticRatingRequirement(null, null, null)
     }
 
-    let rating = MAP[bottomSpace.noiseSensitivity][topSpace.footstepNoiseExposure]
+    const requirement: number = MAP[bottomSpace.noiseSensitivity][topSpace.footstepNoiseExposure]
+    let reduction = 0
     if (bottomSpace.acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
-      rating -= 4
+      reduction += 4
     }
 
     if (bottomSpace.operatingState === 'existing') {
-      rating -= 2
+      reduction += 2
     }
 
     if (topSpace.occupancyType === 'Balkon') {
-      rating -= 5
+      reduction += 5
     }
 
-    return new FootstepAcousticRating(rating)
+    return new AcousticRatingRequirement(
+      requirement,
+      this.noiseExposureUtil.getSpectrumAdjustmentType(topSpace.occupancyType),
+      0,
+      reduction,
+    )
   }
 }
 
-export { FootstepAcousticRating, FootstepAcousticRatingUtil }
+export { FootstepAcousticRatingUtil }
