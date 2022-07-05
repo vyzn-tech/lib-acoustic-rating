@@ -3,17 +3,18 @@ import { ExternalAcousticRating, ExternalAcousticRatingCollection } from './exte
 
 import * as fs from 'fs'
 import CsvConverter from './csv-converter'
+import { SPECTRUM_ADJUSTMENT_TYPE_C, SPECTRUM_ADJUSTMENT_TYPE_CTR } from './noise-exposure'
 
 describe('tests calculation result', () => {
   const externalAcousticRatingCollection: ExternalAcousticRatingCollection = new ExternalAcousticRatingCollection(
-    new ExternalAcousticRating(62, 55, 'ctr'),
-    new ExternalAcousticRating(62, 55, 'ctr'),
-    new ExternalAcousticRating(0, 0, 'c'),
-    new ExternalAcousticRating(0, 0, 'c'),
-    new ExternalAcousticRating(0, 0, 'c'),
-    new ExternalAcousticRating(0, 0, 'c'),
-    new ExternalAcousticRating(0, 0, 'c'),
-    new ExternalAcousticRating(0, 0, 'c'),
+    new ExternalAcousticRating(62, 55, SPECTRUM_ADJUSTMENT_TYPE_CTR),
+    new ExternalAcousticRating(62, 55, SPECTRUM_ADJUSTMENT_TYPE_CTR),
+    new ExternalAcousticRating(0, 0, SPECTRUM_ADJUSTMENT_TYPE_C),
+    new ExternalAcousticRating(0, 0, SPECTRUM_ADJUSTMENT_TYPE_C),
+    new ExternalAcousticRating(0, 0, SPECTRUM_ADJUSTMENT_TYPE_C),
+    new ExternalAcousticRating(0, 0, SPECTRUM_ADJUSTMENT_TYPE_C),
+    new ExternalAcousticRating(0, 0, SPECTRUM_ADJUSTMENT_TYPE_C),
+    new ExternalAcousticRating(0, 0, SPECTRUM_ADJUSTMENT_TYPE_C),
   )
   const inputCSVString = fs.readFileSync('test_assets/input.csv').toString('utf8')
   const validResultJson = fs.readFileSync('test_assets/valid_result.json').toString('utf8')

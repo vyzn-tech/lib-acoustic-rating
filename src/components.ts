@@ -6,7 +6,18 @@ import { ExternalAcousticRating } from './external-acoustic-rating'
 import { AcousticRatingRequirement } from './acoustic-rating-requirement'
 
 type CelestialDirection = null | 'N' | 'NE' | 'E' | 'SE' | 'S' | 'SW' | 'W' | 'NW'
-type OperatingState = 'new' | 'temporary' | 'existing' | 'demolish'
+
+const OPERATING_STATE_NEW = 'new'
+const OPERATING_STATE_TEMP = 'temporary'
+const OPERATING_STATE_EXISTING = 'existing'
+const OPERATING_STATE_DEMOLISH = 'demolish'
+const ALL_OPERATING_STATES = <const>[
+  OPERATING_STATE_NEW,
+  OPERATING_STATE_TEMP,
+  OPERATING_STATE_EXISTING,
+  OPERATING_STATE_DEMOLISH,
+]
+type OperatingState = typeof ALL_OPERATING_STATES[number]
 type Name = 'Wand' | 'Decke' | 'Flachdach' | 'Steildach' | 'Bodenplatte'
 
 const PREDEFINED_TYPE_FLOOR = 'FLOOR'
@@ -14,6 +25,8 @@ const PREDEFINED_TYPE_BASESLAB = 'BASESLAB'
 const PREDEFINED_TYPE_ROOF = 'ROOF'
 const ALL_PREDEFINED_TYPES = <const>[PREDEFINED_TYPE_FLOOR, PREDEFINED_TYPE_BASESLAB, PREDEFINED_TYPE_ROOF]
 type PredefinedType = typeof ALL_PREDEFINED_TYPES[number]
+
+const OCCUPANCY_TYPE_BALCONY = 'Balkon'
 
 type OccupancyType =
   | 'Werkstatt'
@@ -140,7 +153,12 @@ export {
   Zone,
   CelestialDirection,
   Name,
+  OCCUPANCY_TYPE_BALCONY,
   OccupancyType,
   PredefinedType,
+  OPERATING_STATE_NEW,
+  OPERATING_STATE_TEMP,
+  OPERATING_STATE_EXISTING,
+  OPERATING_STATE_DEMOLISH,
   OperatingState,
 }

@@ -11,6 +11,7 @@ import {
   NOISE_EXPOSURE_VERY_HIGH,
   NoiseExposure,
   NoiseExposureUtil,
+  SPECTRUM_ADJUSTMENT_TYPE_C,
   SpectrumAdjustmentType,
 } from './noise-exposure'
 import { NeighbourBuilding, Space } from './components'
@@ -30,6 +31,9 @@ const ACOUSTIC_RATING_TYPE_INDOOR = 'indoor'
 const ACOUSTIC_RATING_TYPE_OUTDOOR = 'outdoor'
 const ACOUSTIC_RATING_TYPES = <const>[ACOUSTIC_RATING_TYPE_INDOOR, ACOUSTIC_RATING_TYPE_OUTDOOR]
 type AcousticRatingType = typeof ACOUSTIC_RATING_TYPES[number]
+
+const AIRBORNE_ACOUSTIC_RATING_ADDITION_OUTDOOR = 3
+const AIRBORNE_ACOUSTIC_RATING_ADDITION_INDOOR = 4
 
 const INDOOR_MAP = {
   [NOISE_SENSITIVITY_LOW]: {
@@ -118,17 +122,17 @@ class AirborneAcousticRatingUtil {
     let requirementNightAddition = 0
 
     if (space.acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
-      requirementDayAddition = AirborneAcousticRatingUtil.getAddition(
+      requirementDayAddition = AirborneAcousticRatingUtil.getAdditionAccordingAcousticRatingLevel(
         space.acousticRatingLevel,
         ACOUSTIC_RATING_TYPE_OUTDOOR,
       )
-      requirementNightAddition = AirborneAcousticRatingUtil.getAddition(
+      requirementNightAddition = AirborneAcousticRatingUtil.getAdditionAccordingAcousticRatingLevel(
         space.acousticRatingLevel,
         ACOUSTIC_RATING_TYPE_OUTDOOR,
       )
     }
 
-    let spectrumAdjustmentType: SpectrumAdjustmentType = 'c'
+    let spectrumAdjustmentType: SpectrumAdjustmentType = SPECTRUM_ADJUSTMENT_TYPE_C
     if (externalAcousticRating) {
       spectrumAdjustmentType = externalAcousticRating.spectrumAdjustmentType
     }
@@ -175,7 +179,7 @@ class AirborneAcousticRatingUtil {
         spaceRight.airborneNoiseExposure,
       )
       if (spaceLeft.constructor == Space) {
-        requirementDirectionLeftToRightAddition = AirborneAcousticRatingUtil.getAddition(
+        requirementDirectionLeftToRightAddition = AirborneAcousticRatingUtil.getAdditionAccordingAcousticRatingLevel(
           spaceLeft.acousticRatingLevel,
           ACOUSTIC_RATING_TYPE_INDOOR,
         )
@@ -188,7 +192,7 @@ class AirborneAcousticRatingUtil {
         spaceLeft.airborneNoiseExposure,
       )
       if (spaceRight.constructor == Space) {
-        requirementDirectionRightToLeftAddition = AirborneAcousticRatingUtil.getAddition(
+        requirementDirectionRightToLeftAddition = AirborneAcousticRatingUtil.getAdditionAccordingAcousticRatingLevel(
           spaceRight.acousticRatingLevel,
           ACOUSTIC_RATING_TYPE_INDOOR,
         )
@@ -213,12 +217,15 @@ class AirborneAcousticRatingUtil {
     return INDOOR_MAP[noiseSensitivity][noiseExposure]
   }
 
-  private static getAddition(acousticRatingLevel: AcousticRatingLevel, type: AcousticRatingType) {
+  private static getAdditionAccordingAcousticRatingLevel(
+    acousticRatingLevel: AcousticRatingLevel,
+    type: AcousticRatingType,
+  ) {
     if (type === ACOUSTIC_RATING_TYPE_OUTDOOR && acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
-      return 3
+      return AIRBORNE_ACOUSTIC_RATING_ADDITION_OUTDOOR
     }
     if (type === ACOUSTIC_RATING_TYPE_INDOOR && acousticRatingLevel === ACOUSTIC_RATING_LEVEL_ENHANCED) {
-      return 4
+      return AIRBORNE_ACOUSTIC_RATING_ADDITION_INDOOR
     }
     return 0
   }
