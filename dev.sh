@@ -1,30 +1,49 @@
 #!/usr/bin/env bash
 set -e
 
-if [ ! -f ".devops/devsh/dev.main.sh" ]; then
-  git submodule update --init
-fi
-source .devops/devsh/dev.main.sh
-
 function configure_git() {
   git config core.hooksPath .devops/githooks
 }
 
-function cleanup_pre_hook() {
+function init() {
+  update
+}
+
+availableArguments="init update help"
+trap "exit" INT
+
+function update() {
+  configure_git
   [ -d node_modules ] || mkdir node_modules
   rm -Rf node_modules/*
-}
-
-function update_pre_hook() {
-  direnv allow . && eval "$(direnv hook bash)" && direnv reload
-  configure_git
-}
-
-function init_pre_hook() {
-  git submodule update --init
-  update_pre_hook
-  configure_git
   npm install
+  chmod +x node_modules/.bin/*
 }
 
-run "$@"
+function init() {
+    git submodule update --init
+    update
+}
+
+function help() {
+    echo ""
+    echo "Usage: $0 [argument]"
+    echo ""
+    echo "Available arguments:"
+    echo "init            init the project and all submodules"
+    echo "update          updates all dependencies"
+    echo "help            display this"
+}
+
+if [[ "$1" == "" ]]; then
+    echo "$0 requires at least 1 argument!"
+    help
+    exit 1
+fi
+
+if [[ "$availableArguments" != *"$1"* ]]; then
+    echo "Error: unknown argument $1"
+    exit 1
+fi
+
+"$1" "$2"
