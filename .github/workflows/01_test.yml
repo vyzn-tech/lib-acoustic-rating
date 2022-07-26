@@ -1,0 +1,30 @@
+name: test
+on:
+  push:
+    branches: '*'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: setup node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: "16.15"
+      - name: install Dependencies
+        run: npm install
+      - name: run linter
+        run: npm run lint-no-fix
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: setup node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: "16.15"
+      - name: install Dependencies
+        run: npm install
+      - name: run tests
+        run: npm run test

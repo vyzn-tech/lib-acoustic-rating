@@ -1,10 +1,11 @@
 {
-  "name": "acousting-rating-calculator",
-  "private": true,
-  "version": "1.0.0",
+  "name": "@vyzn-tech/lib-acousting-rating",
+  "private": false,
+  "version": "0.0.1",
   "description": "",
   "license": "MIT",
   "scripts": {
+    "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "lint-no-fix": "eslint \"{src,apps,libs,test}/**/*.ts\"",
@@ -50,5 +51,16 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "LICENSE.md"
+  ],
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/vyzn-tech/lib-acoustic-rating"
   }
 }

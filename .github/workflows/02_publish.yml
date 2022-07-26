@@ -1,0 +1,52 @@
+name: publish
+on:
+ push:
+   tags:
+     - 'v*'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: setup node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: "16.15"
+      - name: install Dependencies
+        run: npm install
+      - name: run linter
+        run: npm run lint-no-fix
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: setup node.js
+        uses: actions/setup-node@v1
+        with:
+          node-version: "16.15"
+      - name: install Dependencies
+        run: npm install
+      - name: run tests
+        run: npm run test
+
+  publish:
+    needs: [check, test]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+      - name: match-tag-to-package-version
+        id: match-tag-to-package-version
+        uses: geritol/match-tag-to-package-version@0.2.0
+        with:
+          TAG_PREFIX: v
+      - uses: actions/setup-node@v1
+        with:
+          node-version: "16.15"
+      - name: install Dependencies
+        run: npm install
+      - run: npm run build
+      - uses: JS-DevTools/npm-publish@v1
+        with:
+          token: ${{ secrets.NPM_TOKEN }}
+          access: public

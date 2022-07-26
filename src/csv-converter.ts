@@ -110,14 +110,17 @@ class CsvConverter {
   }
 
   private buildSlab(row): Slab {
-    let predefinedType: PredefinedType = null
-    if (
-      !isString(row[CSV_KEY_PREDEFINED_TYPE]) ||
-      !ALL_PREDEFINED_TYPES.includes(row[CSV_KEY_PREDEFINED_TYPE].toUpperCase())
-    ) {
-      predefinedType = PREDEFINED_TYPE_FLOOR
-    } else {
-      predefinedType = row[CSV_KEY_PREDEFINED_TYPE]
+    function getPredefinedType(): PredefinedType {
+      if (!isString(row[CSV_KEY_PREDEFINED_TYPE])) {
+        return PREDEFINED_TYPE_FLOOR
+      }
+
+      for (const type of ALL_PREDEFINED_TYPES) {
+        if (type == row[CSV_KEY_PREDEFINED_TYPE].toUpperCase()) {
+          return type
+        }
+      }
+      return PREDEFINED_TYPE_FLOOR
     }
 
     return new Slab(
@@ -125,7 +128,7 @@ class CsvConverter {
       this.getParentIds(row),
       this.isExternal(row),
       row[CSV_KEY_CELESTIAL_DIRECTION],
-      predefinedType,
+      getPredefinedType(),
     )
   }
 
