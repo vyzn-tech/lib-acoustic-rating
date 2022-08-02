@@ -1,7 +1,7 @@
 {
   "name": "@vyzn-tech/lib-acousting-rating",
   "private": false,
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "",
   "license": "MIT",
   "scripts": {
@@ -15,7 +15,10 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "jest --config ./test/jest-e2e.json"
   },
-  "dependencies": {},
+  "dependencies": {
+    "lodash": "^4.17.21",
+    "csv-load-sync": "^2.3.1"
+  },
   "devDependencies": {
     "@types/jest": "^27.0.2",
     "@types/node": "^16.11.1",
@@ -32,8 +35,7 @@
     "ts-loader": "^9.2.6",
     "ts-node": "^10.3.0",
     "tsconfig-paths": "^3.11.0",
-    "typescript": "^4.4.4",
-    "csv-load-sync": "^2.3.1"
+    "typescript": "^4.4.4"
   },
   "jest": {
     "moduleFileExtensions": [
