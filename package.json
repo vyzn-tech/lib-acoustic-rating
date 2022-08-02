@@ -1,9 +1,14 @@
 {
   "name": "@vyzn-tech/lib-acousting-rating",
   "private": false,
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "",
   "license": "MIT",
+  "author": "vyzn.tech",
+  "bugs": {
+    "url": "https://github.com/vyzn-tech/lib-acoustic-rating/issues"
+  },
+  "homepage": "https://github.com/vyzn-tech/lib-acoustic-rating#readme",
   "scripts": {
     "build": "tsc",
     "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
@@ -59,8 +64,8 @@
     "README.md",
     "LICENSE.md"
   ],
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "repository": {
     "type": "git",
     "url": "https://github.com/vyzn-tech/lib-acoustic-rating"
