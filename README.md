@@ -1,20 +1,20 @@
-# lib-acousting-rating
+# lib-acoustic-rating
 
-lib-acousting-rating is a Javascript library which calculates acoustic rating requirements for IFC-data according to SIA 181.
+lib-acoustic-rating is a Javascript library which calculates acoustic rating requirements for IFC-data according to SIA 181.
 
 ## Installation
 
-Use the package manager [npm](https://docs.npmjs.com/try-the-latest-stable-version-of-npm) to install lib-acousting-rating.
+Use the package manager [npm](https://docs.npmjs.com/try-the-latest-stable-version-of-npm) to install lib-acoustic-rating.
 
 ```bash
-npm install @vyzn-tech/lib-acousting-rating
+npm install @vyzn-tech/lib-acoustic-rating
 ```
 
 ## Usage
 
 ```javascript
-import CsvConverter from '@vyzn-tech/lib-acousting-rating/dist/csv-converter'
-import { AcousticRatingCalculator } from '@vyzn-tech/lib-acousting-rating/dist/calculator'
+import CsvConverter from '@vyzn-tech/lib-acoustic-rating/dist/csv-converter'
+import { AcousticRatingCalculator } from '@vyzn-tech/lib-acoustic-rating/dist/calculator'
 
 const items = new CsvConverter().convertToComponents(csvString)
 
