@@ -101,7 +101,11 @@ class AirborneAcousticRatingToInternal {
 }
 
 class AirborneAcousticRatingUtil {
-  noiseExposureUtil = new NoiseExposureUtil()
+  noiseExposureUtil: NoiseExposureUtil
+
+  constructor(noiseExposureUtil: NoiseExposureUtil) {
+    this.noiseExposureUtil = noiseExposureUtil
+  }
 
   public getAirborneAcousticRatingTowardsExternalSources(
     space: Space,

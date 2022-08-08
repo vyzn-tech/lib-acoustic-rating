@@ -62,28 +62,19 @@ const NOISE_SENSITIVITY_MAP_SIA181_2006: NoiseSensitivityMap = {
   Spitalzimmer: NOISE_SENSITIVITY_HIGH,
 }
 
-const NOISE_SENSITIVITY_MAP_SEESTRASSE: NoiseSensitivityMap = {
-  Terrasse: NOISE_SENSITIVITY_NONE,
-  Waschraum: NOISE_SENSITIVITY_NONE,
-  Einfahrt: NOISE_SENSITIVITY_NONE,
-  Keller: NOISE_SENSITIVITY_NONE,
-  Technik: NOISE_SENSITIVITY_NONE,
-  Tiefgarage: NOISE_SENSITIVITY_NONE,
-  Treppenhaus: NOISE_SENSITIVITY_NONE,
-
-  Gewerbe: NOISE_SENSITIVITY_LOW,
-  Bad: NOISE_SENSITIVITY_LOW,
-
-  Wohnen: NOISE_SENSITIVITY_MODERATE,
-  Schlafen: NOISE_SENSITIVITY_MODERATE,
-}
-
 class NoiseSensitivityUtil {
+  additionalNoiseSensitivityMap: NoiseSensitivityMap = {}
+  constructor(additionalNoiseSensitivityMap?: NoiseSensitivityMap) {
+    if (additionalNoiseSensitivityMap) {
+      this.additionalNoiseSensitivityMap = additionalNoiseSensitivityMap
+    }
+  }
+
   getNoiseSensitivity(occupancy: string): NoiseSensitivity {
     const map = {
       ...NOISE_SENSITIVITY_MAP_SIA181_2006,
       ...NOISE_SENSITIVITY_MAP_SIA181_2020,
-      ...NOISE_SENSITIVITY_MAP_SEESTRASSE,
+      ...this.additionalNoiseSensitivityMap,
     }
 
     for (const [key, value] of Object.entries(map)) {
@@ -101,4 +92,5 @@ export {
   NOISE_SENSITIVITY_HIGH,
   NoiseSensitivity,
   NoiseSensitivityUtil,
+  NoiseSensitivityMap,
 }
