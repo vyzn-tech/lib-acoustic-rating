@@ -19,8 +19,12 @@ import { AcousticRatingCalculator } from '@vyzn-tech/lib-acoustic-rating/dist/ca
 const items = new CsvConverter().convertToComponents(csvString)
 
 const calculator = new AcousticRatingCalculator(
-  items,
-  externalAcousticRatings,
+  items, //                               required => see CSV
+  externalAcousticRatings //              required => see External-Acoustic-Ratings
+  // additionalNoiseSensitivityMap        optional => see Noise-Sensitivity-Map
+  // additionalAirborneNoiseExposureMap   optional => see Airborne-Noise-Exposure-Map
+  // additionalFootstepNoiseExposureMap   optional => see Footstep-Noise-Exposure-Map
+  // additionalSpectrumAdjustmentTypeMap  optional => see Spectrum-Adjustment-Type-Map
 )
 
 console.log(calculator.calculate())
@@ -28,7 +32,7 @@ console.log(calculator.calculate())
 
 ## Expected Input
 
-### CSV-Structure
+### CSV
 | Column                  | Description                                                                                                                                                                                                                                                                                                                                                                                     | Supported Values                                                                                                                                                                                                                                      | Example                  | Comment                                                                                |
 |-------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------|----------------------------------------------------------------------------------------|
 | GUID                    | An IfcGloballyUniqueId holds an encoded string identifier that is used to uniquely identify an IFC object.                                                                                                                                                                                                                                                                                      | 22 character length string "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$"                                                                                                                                                         | 01$34_67$9_BsbEFbH$JK_M  | GUID(same as original IFC) or UniqueLabel (unique string)                              |
@@ -43,7 +47,7 @@ console.log(calculator.calculate())
 | CelestialDirection      | Himmelsrichtung 8 options                                                                                                                                                                                                                                                                                                                                                                       | N, NE, E, SE, S, SW, W, NW                                                                                                                                                                                                                            | SW                       | Orientation  Could be remapped in an interface to match the request                    |
 | CenterOfGravityZ        | Gravitationsschwerpunkt des Raumvolumens [m]                                                                                                                                                                                                                                                                                                                                                    | -99.99 to 99.99                                                                                                                                                                                                                                       | 3.43                     | Should be produced by the REF model                                                    |
 
-### Example CSV
+#### Example
 |GUID|Entity     |PredefinedType|ParentIds|Name             |AcousticRatingLevelReq|Status  |IsExternal|OccupancyType   |CelestialDirection|CenterOfGravityZ|
 |----|-----------|--------------|---------|-----------------|----------------------|--------|----------|----------------|------------------|----------------|
 |1   |IfcWall    |              |47       |                 |                      |        |TRUE      |                |NE                |                |
@@ -120,16 +124,28 @@ console.log(calculator.calculate())
 |72  |IfcBuilding|              |         |Bauprojekt       |                      |new     |          |                |                  |                |
 |73  |IfcBuilding|              |         |Nachbargebäude   |                      |existing|          |Wohnen          |                  |                |
 
-### External Acoustic Ratings Structure
+### External-Acoustic-Ratings
 
-| Key                    | Description | Type   | Values          |
-|------------------------|---|--------|-----------------|
-| day                    |  | int    |            |
-| night                  |  | int    |            |
-| spectrumAdjustmentType |  | string | c, ctr |
+| Key  | Description | Type                                                           |
+|------|-------------|----------------------------------------------------------------|
+| n    | North       | [object: External-Acoustic-Rating](#external-acoustic-rating) |
+| ne   | North-East  | [object: External-Acoustic-Rating](#external-acoustic-rating) |
+| e    | East        | [object: External-Acoustic-Rating](#external-acoustic-rating) |
+| se   | South-East  | [object: External-Acoustic-Rating](#external-acoustic-rating) |
+| s    | South       | [object: External-Acoustic-Rating](#external-acoustic-rating) |
+| sw   | South-West  | [object: External-Acoustic-Rating](#external-acoustic-rating) |
+| w    | West        | [object: External-Acoustic-Rating](#external-acoustic-rating) |
+| nw   | North-West  | [object: External-Acoustic-Rating](#external-acoustic-rating) |
+
+### External-Acoustic-Rating
+| Key                    | Type                           | Values          |
+|------------------------|--------------------------------|-----------------|
+| day                    | int                            | -2,147,483,647 to 2,147,483,647 |
+| night                  | int                            | -2,147,483,647 to 2,147,483,647 |
+| spectrumAdjustmentType | string: SpectrumAdjustmentType | c, ctr |
 
 
-### Example JSON
+#### Example
 ```json
 {
   "n": {
@@ -174,6 +190,65 @@ console.log(calculator.calculate())
   }
 }
 ```
+
+### Noise-Sensitivity-Map
+| Key                   |  Type   | Values                                     |
+|-----------------------|---------|--------------------------------------------|
+| string: OccupancyType | int    | null = None, 1 = Low, 2 = Medium, 3 = High |
+
+#### Example
+```json
+{
+    "Terrasse": null,
+    "Werkstatt": 1,
+    "Wohnzimmer": 2,
+    "Studierzimmer": 3
+}
+```
+
+### Airborne-Noise-Exposure-Map
+| Key                   |  Type   | Values                                         |
+|-----------------------|---------|------------------------------------------------|
+| string: OccupancyType | int    | 1 = Low, 2 = Moderate, 3 = High, 4 = Very High |
+
+#### Example
+```json
+{
+    "Terrasse": 4,
+    "Werkstatt": 3,
+    "Wohnzimmer": 2,
+    "Studierzimmer": 1
+}
+```
+
+### Airborne-Noise-Exposure-Map 
+| Key                   |  Type   | Values                                         |
+|-----------------------|---------|------------------------------------------------|
+| string: OccupancyType | int    | 1 = Low, 2 = Moderate, 3 = High, 4 = Very High |
+
+#### Example
+```json
+{
+    "Terrasse": 4,
+    "Werkstatt": 3,
+    "Wohnzimmer": 2,
+    "Studierzimmer": 1
+}
+```
+
+### Spectrum-Adjustment-Type-Map
+| Key                   | Type                           | Values                          |
+|-----------------------|--------------------------------|---------------------------------|
+| string: OccupancyType | string: SpectrumAdjustmentType | c, ctr |
+
+#### Example
+```json
+{
+    "Terrasse":"c",
+    "Werkstatt": "ctr"
+}
+```
+
 
 ## Contributing
 Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
