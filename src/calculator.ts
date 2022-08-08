@@ -8,10 +8,11 @@ import {
   SpectrumAdjustmentType,
   SpectrumAdjustmentTypeMap,
 } from './noise-exposure'
-import { AirborneAcousticRatingUtil } from './airborn-acoustic-rating'
+import { AirborneAcousticRatingUtil } from './airborne-acoustic-rating'
 import { FootstepAcousticRatingUtil } from './footstep-acoustic-rating'
 import { Component, FlatRoof, NeighbourBuilding, Roof, Slab, Space, Surface, Wall, Zone } from './components'
 import { ExternalAcousticRatingCollection } from './external-acoustic-rating'
+import JsonSerializer from "./json-serializer";
 
 class OutputItem {
   constructor(
@@ -26,7 +27,7 @@ class OutputItem {
 }
 
 class AcousticRatingCalculator {
-  items: Component[]
+  components: Component[]
   externalAcousticRatings: ExternalAcousticRatingCollection
   noiseSensitivityUtil: NoiseSensitivityUtil
   noiseExposureUtil: NoiseExposureUtil
@@ -34,14 +35,14 @@ class AcousticRatingCalculator {
   footstepAcousticRatingUtil: FootstepAcousticRatingUtil
 
   constructor(
-    items: Component[],
+    components: Component[],
     externalAcousticRatings: ExternalAcousticRatingCollection,
     additionalNoiseSensitivityMap?: NoiseSensitivityMap,
     additionalAirborneNoiseExposureMap?: NoiseExposureMap,
     additionalFootstepNoiseExposureMap?: NoiseExposureMap,
     additionalSpectrumAdjustmentTypeMap?: SpectrumAdjustmentTypeMap,
   ) {
-    this.items = items
+    this.components = components
     this.externalAcousticRatings = externalAcousticRatings
     this.noiseSensitivityUtil = new NoiseSensitivityUtil(additionalNoiseSensitivityMap)
     this.noiseExposureUtil = new NoiseExposureUtil(
@@ -54,6 +55,7 @@ class AcousticRatingCalculator {
   }
 
   public calculate(): OutputItem[] {
+    console.log((new JsonSerializer()).serialize(this.components))
     const output: OutputItem[] = []
     this.setExternalAcousticRating()
     this.setNoiseSensitivityAndExposure()
@@ -64,7 +66,9 @@ class AcousticRatingCalculator {
     this.setAcousticRatingToInternalSources()
     this.setFootstepRating()
 
-    for (const component of this.items) {
+
+
+    for (const component of this.components) {
       if (component instanceof Surface) {
         output.push(
           new OutputItem(
@@ -83,7 +87,7 @@ class AcousticRatingCalculator {
   }
 
   private setExternalAcousticRating() {
-    for (const component of this.items) {
+    for (const component of this.components) {
       if (component instanceof Surface && component.hasOwnProperty('celestialDirection')) {
         for (const key in this.externalAcousticRatings) {
           if (key === lowerCase(component.celestialDirection)) {
@@ -95,7 +99,7 @@ class AcousticRatingCalculator {
   }
 
   private setNoiseSensitivityAndExposure() {
-    for (const component of this.items) {
+    for (const component of this.components) {
       if (component instanceof Space || component instanceof NeighbourBuilding) {
         component.noiseSensitivity = this.noiseSensitivityUtil.getNoiseSensitivity(component.occupancyType)
         component.airborneNoiseExposure = this.noiseExposureUtil.getAirborneNoiseExposure(component.occupancyType)
@@ -107,7 +111,7 @@ class AcousticRatingCalculator {
   }
 
   private setAcousticRatingLevels() {
-    for (const component of this.items) {
+    for (const component of this.components) {
       if (component instanceof Space) {
         if (component.parentIds.length != 1) {
           throw RangeError('Space with more or less than one parentId is invalid!')
@@ -123,7 +127,7 @@ class AcousticRatingCalculator {
   }
 
   private setOperationStates() {
-    for (const component of this.items) {
+    for (const component of this.components) {
       if (component instanceof Space) {
         if (component.parentIds.length != 1) {
           throw RangeError('Space with more or less than one parentId is invalid!')
@@ -139,7 +143,7 @@ class AcousticRatingCalculator {
   }
 
   private getParentComponent(id: string): Component {
-    for (const component of this.items) {
+    for (const component of this.components) {
       if (component.id == id) {
         return component
       }
@@ -156,7 +160,7 @@ class AcousticRatingCalculator {
         component.isExternal == true
       )
     }
-    const filteredSurfaces: Surface[] = this.items.filter(filter)
+    const filteredSurfaces: Surface[] = this.components.filter(filter)
 
     for (const surface of filteredSurfaces) {
       const parentSpace = this.getInternalConnectedSpace(surface.parentIds)
@@ -181,7 +185,7 @@ class AcousticRatingCalculator {
         component instanceof Roof
       )
     }
-    const filteredSurfaces: Surface[] = this.items.filter(filter)
+    const filteredSurfaces: Surface[] = this.components.filter(filter)
 
     for (const surface of filteredSurfaces) {
       if (surface.parentIds.length <= 1) {
@@ -200,7 +204,7 @@ class AcousticRatingCalculator {
     function filter(component: Component): component is Slab | FlatRoof {
       return component instanceof Slab || component instanceof FlatRoof
     }
-    const filteredSlabs: (Slab | FlatRoof)[] = this.items.filter(filter)
+    const filteredSlabs: (Slab | FlatRoof)[] = this.components.filter(filter)
     for (const filteredSlab of filteredSlabs) {
       if (filteredSlab.parentIds && filteredSlab.parentIds.length == 2) {
         const connectedSpaces = this.getConnectedSpaces(filteredSlab.parentIds)
@@ -258,7 +262,7 @@ class AcousticRatingCalculator {
         component.occupancyType !== 'Terrasse'
       )
     }
-    const filteredSpaces: Space[] = this.items.filter(filter)
+    const filteredSpaces: Space[] = this.components.filter(filter)
 
     for (const parentId of parentIds) {
       for (const space of filteredSpaces) {
@@ -273,11 +277,11 @@ class AcousticRatingCalculator {
     function filter(component: Component): component is Space | NeighbourBuilding {
       return component instanceof Space || component instanceof NeighbourBuilding
     }
-    const filteredItems: (Space | NeighbourBuilding)[] = this.items.filter(filter)
+    const filteredComponents: (Space | NeighbourBuilding)[] = this.components.filter(filter)
 
     const rooms: (Space | NeighbourBuilding)[] = []
     for (const parentId of parentIds) {
-      for (const component of filteredItems) {
+      for (const component of filteredComponents) {
         if (component.id === parentId) {
           rooms.push(component)
         }
@@ -290,11 +294,11 @@ class AcousticRatingCalculator {
     function filter(component: Component): component is Space {
       return component instanceof Space
     }
-    const filteredItems: Space[] = this.items.filter(filter)
+    const filteredComponents: Space[] = this.components.filter(filter)
 
     const rooms: Space[] = []
     for (const parentId of parentIds) {
-      for (const component of filteredItems) {
+      for (const component of filteredComponents) {
         if (component.id === parentId) {
           rooms.push(component)
         }

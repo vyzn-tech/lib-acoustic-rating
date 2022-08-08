@@ -1,4 +1,4 @@
-import { AirborneAcousticRatingToExternal, AirborneAcousticRatingToInternal } from './airborn-acoustic-rating'
+import { AirborneAcousticRatingToExternal, AirborneAcousticRatingToInternal } from './airborne-acoustic-rating'
 import { NoiseSensitivity } from './noise-sensitivity'
 import { NoiseExposure } from './noise-exposure'
 import { AcousticRatingLevel } from './acoustic-rating-level'

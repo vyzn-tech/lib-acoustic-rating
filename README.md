@@ -13,13 +13,13 @@ npm install @vyzn-tech/lib-acoustic-rating
 ## Usage
 
 ```javascript
-import CsvConverter from '@vyzn-tech/lib-acoustic-rating/dist/csv-converter'
+import JsonSerializer from '@vyzn-tech/lib-acoustic-rating/dist/json-serializer'
 import { AcousticRatingCalculator } from '@vyzn-tech/lib-acoustic-rating/dist/calculator'
 
-const items = new CsvConverter().convertToComponents(csvString)
+const items = new JsonSerializer().deserialize(jsonString)
 
 const calculator = new AcousticRatingCalculator(
-  items, //                               required => see CSV
+  items, //                               required => see Expected Input
   externalAcousticRatings //              required => see External-Acoustic-Ratings
   // additionalNoiseSensitivityMap        optional => see Noise-Sensitivity-Map
   // additionalAirborneNoiseExposureMap   optional => see Airborne-Noise-Exposure-Map
@@ -32,97 +32,890 @@ console.log(calculator.calculate())
 
 ## Expected Input
 
-### CSV
-| Column                  | Description                                                                                                                                                                                                                                                                                                                                                                                     | Supported Values                                                                                                                                                                                                                                      | Example                  | Comment                                                                                |
-|-------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------|----------------------------------------------------------------------------------------|
-| GUID                    | An IfcGloballyUniqueId holds an encoded string identifier that is used to uniquely identify an IFC object.                                                                                                                                                                                                                                                                                      | 22 character length string "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz_$"                                                                                                                                                         | 01$34_67$9_BsbEFbH$JK_M  | GUID(same as original IFC) or UniqueLabel (unique string)                              |
-| Entity                  | In an IFC model, project information is represented as a series of IFC entities. Each IFC entity contains a fixed number of IFC attributes as well as any number of additional IFC properties. The IFC schema includes several hundred entities, of which the building element-type entities (such as IfcWall and IfcColumn) represent only 25.                                                 | IfcWall  IfcSlab  IfcRoof  IfcSpace  IfcZone  IfcBuilding                                                                                                                                                                                             | IfcWall                  | ElementType  Could be remapped in an interface to match the request                    |
-| PredefinedType          | only required for IfcSlab:  The predefined type based on IFC.                                                                                                                                                                                                                                                                                                                                   | FLOOR  BASESLAB  ROOF                                                                                                                                                                                                                                 | FLOOR                    | See Entity                                                                             |
-| ParentIds               | The ID of the parent element (IfcRelation/ IfcRelToGroup)                                                                                                                                                                                                                                                                                                                                       | A value from column “ID” of another row or  null (empty cell)                                                                                                                                                                                         | 01$34_67$9_BsbEFbH$JK_M  | Will be the result of the link service                                                 |
-| Name                    | only required for IfcZone and IfcBuilding:  Bezeichnung respektive Name, welcher sich von anderer Nutzungseinheit oder anderen Gebäude unterscheidet                                                                                                                                                                                                                                            | frei (string), beispielsweise Nutzungseinheit_1,  Nutzungseinheit_2,... Dach  Fluchtweg_1, Bauprojekt,  Nachbargebäude                                                                                                                                | Nutzungseinheit_1        | User input - ideally to be inputted on the platform / second option would be IFC input |
-| AcousticRatingLevelReq  | only required for IfcZone                                                                                                                                                                                                                                                                                                                                                                       | Mindestanforderungen, Erhöhte Anforderungen                                                                                                                                                                                                           | Mindestanforderungen     | User input                                                                             |
-| Status                  | only required for IfcZone and IfcBuilding:  Status of the element, predominately used in renovation or retrofitting projects. The status can be assigned to as "New" - element designed as new addition, "Existing" - element exists and remains, "Demolish" - element existed but is to be demolished, "Temporary" - element will exists only temporary (like a temporary support structure).  | new, existing , temporary                                                                                                                                                                                                                             | new                      | ConstructionType  Missing option “temporary” should be added                           |
-| IsExternal              | Indication whether the element is designed for use in the exterior (TRUE) or not (FALSE). If (TRUE) it is an external element and faces the outside of the building                                                                                                                                                                                                                             | TRUE  FALSE                                                                                                                                                                                                                                           | TRUE                     | PositionAgainst  Could be remapped in an interface to match the request                |
-| OccupancyType           | Occupancy type for this object. It is defined according to the presiding national code.                                                                                                                                                                                                                                                                                                         | Werkstatt, Empfang,  Warteraum, Großraumbüro, Kantine,  Restaurant, Bad, WC,  Verkauf, Labor, Korridor,  Wohnen, Schlafen,  Studio, Schulzimmer,  Wohnküche, Büroraum,  Hotelzimmer, Spitalzimmer, Ruheräume  Therapieraum, Lesezimmer, Studierzimmer | Wohnküche                | User input - Since that is a national standard the options should be in german         |
-| CelestialDirection      | Himmelsrichtung 8 options                                                                                                                                                                                                                                                                                                                                                                       | N, NE, E, SE, S, SW, W, NW                                                                                                                                                                                                                            | SW                       | Orientation  Could be remapped in an interface to match the request                    |
-| CenterOfGravityZ        | Gravitationsschwerpunkt des Raumvolumens [m]                                                                                                                                                                                                                                                                                                                                                    | -99.99 to 99.99                                                                                                                                                                                                                                       | 3.43                     | Should be produced by the REF model                                                    |
+#### Example
+```json
+[
+  {
+    "type": "Wall",
+    "id": "1",
+    "parentIds": [
+      "47"
+    ],
+    "isExternal": true,
+    "celestialDirection": "NE"
+  },
+  {
+    "type": "Wall",
+    "id": "2",
+    "parentIds": [
+      "51"
+    ],
+    "isExternal": true,
+    "celestialDirection": "NE"
+  },
+  {
+    "type": "Wall",
+    "id": "3",
+    "parentIds": [
+      "47",
+      "54"
+    ],
+    "isExternal": true,
+    "celestialDirection": "NE"
+  },
+  {
+    "type": "Wall",
+    "id": "4",
+    "parentIds": [
+      "48",
+      "54"
+    ],
+    "isExternal": true,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "5",
+    "parentIds": [
+      "47",
+      "52"
+    ],
+    "isExternal": false,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "6",
+    "parentIds": [
+      "46",
+      "47"
+    ],
+    "isExternal": false,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "7",
+    "parentIds": [
+      "47",
+      "53"
+    ],
+    "isExternal": false,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "8",
+    "parentIds": [
+      "47",
+      "55"
+    ],
+    "isExternal": false,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "9",
+    "parentIds": [
+      "50",
+      "55"
+    ],
+    "isExternal": false,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "10",
+    "parentIds": [
+      "46",
+      "55"
+    ],
+    "isExternal": false,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "11",
+    "parentIds": [
+      "51",
+      "50"
+    ],
+    "isExternal": false,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "12",
+    "parentIds": [
+      "51",
+      "49"
+    ],
+    "isExternal": false,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "13",
+    "parentIds": [
+      "51",
+      "48"
+    ],
+    "isExternal": false,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "14",
+    "parentIds": [
+      "53",
+      "49"
+    ],
+    "isExternal": false,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "15",
+    "parentIds": [
+      "47",
+      "73"
+    ],
+    "isExternal": false,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "16",
+    "parentIds": [
+      "55",
+      "73"
+    ],
+    "isExternal": false,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "17",
+    "parentIds": [
+      "53",
+      "73"
+    ],
+    "isExternal": false,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "18",
+    "parentIds": [
+      "64",
+      "51"
+    ],
+    "isExternal": false,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Wall",
+    "id": "19",
+    "parentIds": [
+      "57",
+      "59"
+    ],
+    "isExternal": true,
+    "celestialDirection": "NE"
+  },
+  {
+    "type": "Slab",
+    "id": "20",
+    "parentIds": [
+      "56",
+      "62"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "21",
+    "parentIds": [
+      "58",
+      "62"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "22",
+    "parentIds": [
+      "59",
+      "62"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "23",
+    "parentIds": [
+      "60",
+      "62"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "24",
+    "parentIds": [
+      "55",
+      "62"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "25",
+    "parentIds": [
+      "56",
+      "63"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "26",
+    "parentIds": [
+      "56",
+      "46"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "27",
+    "parentIds": [
+      "48",
+      "62"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "28",
+    "parentIds": [
+      "49",
+      "62"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "29",
+    "parentIds": [
+      "50",
+      "57"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "FlatRoof",
+    "id": "30",
+    "parentIds": [
+      "46",
+      "55"
+    ],
+    "isExternal": true,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "FlatRoof",
+    "id": "31",
+    "parentIds": [
+      "46",
+      "52"
+    ],
+    "isExternal": true,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Slab",
+    "id": "32",
+    "parentIds": [
+      "48",
+      "53"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "33",
+    "parentIds": [
+      "47",
+      "58"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "34",
+    "parentIds": [
+      "50",
+      "63"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "35",
+    "parentIds": [
+      "47",
+      "65"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "36",
+    "parentIds": [
+      "47",
+      "51"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "37",
+    "parentIds": [
+      "61",
+      "58"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "38",
+    "parentIds": [
+      "58",
+      "64"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "39",
+    "parentIds": [
+      "58",
+      "65"
+    ],
+    "isExternal": false,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "Slab",
+    "id": "40",
+    "parentIds": [
+      "52",
+      "57"
+    ],
+    "isExternal": true,
+    "celestialDirection": "",
+    "predefinedType": "FLOOR"
+  },
+  {
+    "type": "FlatRoof",
+    "id": "41",
+    "parentIds": [
+      "46",
+      "62"
+    ],
+    "isExternal": true,
+    "celestialDirection": "NE"
+  },
+  {
+    "type": "Door",
+    "id": "42",
+    "parentIds": [
+      "1"
+    ],
+    "isExternal": true,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "FlatRoof",
+    "id": "43",
+    "parentIds": [
+      "46"
+    ],
+    "isExternal": true,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Roof",
+    "id": "44",
+    "parentIds": [
+      "47"
+    ],
+    "isExternal": true,
+    "celestialDirection": "N"
+  },
+  {
+    "type": "Space",
+    "id": "45",
+    "parentIds": [
+      "70"
+    ],
+    "occupancyType": "Wartungsarbeiten",
+    "centerOfGravityZ": 7
+  },
+  {
+    "type": "Space",
+    "id": "46",
+    "parentIds": [
+      "66"
+    ],
+    "occupancyType": "Terrasse",
+    "centerOfGravityZ": 6
+  },
+  {
+    "type": "Space",
+    "id": "47",
+    "parentIds": [
+      "66"
+    ],
+    "occupancyType": "Wohnen",
+    "centerOfGravityZ": 6.5
+  },
+  {
+    "type": "Space",
+    "id": "48",
+    "parentIds": [
+      "66"
+    ],
+    "occupancyType": "Wohnen",
+    "centerOfGravityZ": 6.5
+  },
+  {
+    "type": "Space",
+    "id": "49",
+    "parentIds": [
+      "66"
+    ],
+    "occupancyType": "Bad",
+    "centerOfGravityZ": 6.5
+  },
+  {
+    "type": "Space",
+    "id": "50",
+    "parentIds": [
+      "66"
+    ],
+    "occupancyType": "Schlafen",
+    "centerOfGravityZ": 6.5
+  },
+  {
+    "type": "Space",
+    "id": "51",
+    "parentIds": [
+      "71"
+    ],
+    "occupancyType": "Treppenhaus",
+    "centerOfGravityZ": 6.4
+  },
+  {
+    "type": "Space",
+    "id": "52",
+    "parentIds": [
+      "67"
+    ],
+    "occupancyType": "Wohnen",
+    "centerOfGravityZ": 3.5
+  },
+  {
+    "type": "Space",
+    "id": "53",
+    "parentIds": [
+      "67"
+    ],
+    "occupancyType": "Bad",
+    "centerOfGravityZ": 3.5
+  },
+  {
+    "type": "Space",
+    "id": "54",
+    "parentIds": [
+      "67"
+    ],
+    "occupancyType": "Terrasse",
+    "centerOfGravityZ": 3.5
+  },
+  {
+    "type": "Space",
+    "id": "55",
+    "parentIds": [
+      "67"
+    ],
+    "occupancyType": "Schlafen",
+    "centerOfGravityZ": 3.5
+  },
+  {
+    "type": "Space",
+    "id": "56",
+    "parentIds": [
+      "68"
+    ],
+    "occupancyType": "Tiefgarage",
+    "centerOfGravityZ": -3
+  },
+  {
+    "type": "Space",
+    "id": "57",
+    "parentIds": [
+      "69"
+    ],
+    "occupancyType": "Einfahrt",
+    "centerOfGravityZ": -3
+  },
+  {
+    "type": "Space",
+    "id": "58",
+    "parentIds": [
+      "68"
+    ],
+    "occupancyType": "Gewerbe",
+    "centerOfGravityZ": -3
+  },
+  {
+    "type": "Space",
+    "id": "59",
+    "parentIds": [
+      "68"
+    ],
+    "occupancyType": "Keller",
+    "centerOfGravityZ": -3
+  },
+  {
+    "type": "Space",
+    "id": "60",
+    "parentIds": [
+      "68"
+    ],
+    "occupancyType": "Technik",
+    "centerOfGravityZ": -3
+  },
+  {
+    "type": "Space",
+    "id": "61",
+    "parentIds": [
+      "68"
+    ],
+    "occupancyType": "Waschraum",
+    "centerOfGravityZ": -6
+  },
+  {
+    "type": "Space",
+    "id": "62",
+    "parentIds": [
+      "69"
+    ],
+    "occupancyType": "Tiefgarage",
+    "centerOfGravityZ": -6
+  },
+  {
+    "type": "Space",
+    "id": "63",
+    "parentIds": [
+      "69"
+    ],
+    "occupancyType": "Gewerbe",
+    "centerOfGravityZ": -6
+  },
+  {
+    "type": "Space",
+    "id": "64",
+    "parentIds": [
+      "69"
+    ],
+    "occupancyType": "Keller",
+    "centerOfGravityZ": -6
+  },
+  {
+    "type": "Space",
+    "id": "65",
+    "parentIds": [
+      "69"
+    ],
+    "occupancyType": "Technik",
+    "centerOfGravityZ": -6
+  },
+  {
+    "type": "Zone",
+    "id": "66",
+    "parentIds": [
+      "72"
+    ],
+    "name": "Nutzungseinheit_1",
+    "operatingState": "new",
+    "acousticRatingLevel": "Erhoehte Anforderungen"
+  },
+  {
+    "type": "Zone",
+    "id": "67",
+    "parentIds": [
+      "72"
+    ],
+    "name": "Nutzungseinheit_2",
+    "operatingState": "new",
+    "acousticRatingLevel": "Erhoehte Anforderungen"
+  },
+  {
+    "type": "Zone",
+    "id": "68",
+    "parentIds": [
+      "72"
+    ],
+    "name": "Nutzungseinheit_3",
+    "operatingState": "new",
+    "acousticRatingLevel": "Erhoehte Anforderungen"
+  },
+  {
+    "type": "Zone",
+    "id": "69",
+    "parentIds": [
+      "72"
+    ],
+    "name": "Nutzungseinheit_4",
+    "operatingState": "new",
+    "acousticRatingLevel": "Erhoehte Anforderungen"
+  },
+  {
+    "type": "Zone",
+    "id": "70",
+    "parentIds": [
+      "72"
+    ],
+    "name": "Dach",
+    "operatingState": "new",
+    "acousticRatingLevel": "Erhoehte Anforderungen"
+  },
+  {
+    "type": "Zone",
+    "id": "71",
+    "parentIds": [
+      "72"
+    ],
+    "name": "Fluchtweg_1",
+    "operatingState": "new",
+    "acousticRatingLevel": "Minimale Anforderungen"
+  },
+  {
+    "type": "Building",
+    "id": "72",
+    "parentIds": [],
+    "name": "Bauprojekt",
+    "operatingState": "new"
+  },
+  {
+    "type": "NeighbourBuilding",
+    "id": "73",
+    "parentIds": [],
+    "occupancyType": "Wohnen"
+  }
+]
+```
+
+## Components
+
+### Wall
+| Key                | Type     | Description                                                                                                                                            |
+|--------------------|----------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| id                 | string   | IfcGloballyUniqueId                                                                                                                                    |
+| parendIds          | string[] | The ID of the parent element (IfcRelation/ IfcRelToGroup)                                                                                              |
+| isExternal         | boolean  | Indication whether the element is designed for use in the exterior or not. If `true` it is an external component and faces the outside of the building |
+| celestialDirection | [string: CelestrialDirection](#celestialdirection)   |                                                                                                                                                        |
 
 #### Example
-|GUID|Entity     |PredefinedType|ParentIds|Name             |AcousticRatingLevelReq|Status  |IsExternal|OccupancyType   |CelestialDirection|CenterOfGravityZ|
-|----|-----------|--------------|---------|-----------------|----------------------|--------|----------|----------------|------------------|----------------|
-|1   |IfcWall    |              |47       |                 |                      |        |TRUE      |                |NE                |                |
-|2   |IfcWall    |              |51       |                 |                      |        |TRUE      |                |NE                |                |
-|3   |IfcWall    |              |47,54    |                 |                      |        |TRUE      |                |NE                |                |
-|4   |IfcWall    |              |48,54    |                 |                      |        |TRUE      |                |N                 |                |
-|5   |IfcWall    |              |47,52    |                 |                      |        |FALSE     |                |N                 |                |
-|6   |IfcWall    |              |46,47    |                 |                      |        |FALSE     |                |N                 |                |
-|7   |IfcWall    |              |47,53    |                 |                      |        |FALSE     |                |N                 |                |
-|8   |IfcWall    |              |47,55    |                 |                      |        |FALSE     |                |N                 |                |
-|9   |IfcWall    |              |50,55    |                 |                      |        |FALSE     |                |N                 |                |
-|10  |IfcWall    |              |46,55    |                 |                      |        |FALSE     |                |N                 |                |
-|11  |IfcWall    |              |51,50    |                 |                      |        |FALSE     |                |N                 |                |
-|12  |IfcWall    |              |51,49    |                 |                      |        |FALSE     |                |N                 |                |
-|13  |IfcWall    |              |51,48    |                 |                      |        |FALSE     |                |N                 |                |
-|14  |IfcWall    |              |53,49    |                 |                      |        |FALSE     |                |N                 |                |
-|15  |IfcWall    |              |47,73    |                 |                      |        |FALSE     |                |N                 |                |
-|16  |IfcWall    |              |55,73    |                 |                      |        |FALSE     |                |N                 |                |
-|17  |IfcWall    |              |53,73    |                 |                      |        |FALSE     |                |N                 |                |
-|18  |IfcWall    |              |64,51    |                 |                      |        |FALSE     |                |N                 |                |
-|19  |IfcWall    |              |57,59    |                 |                      |        |TRUE      |                |NE                |                |
-|20  |IfcSlab    |FLOOR         |56,62    |                 |                      |        |FALSE     |                |                  |                |
-|21  |IfcSlab    |FLOOR         |58,62    |                 |                      |        |FALSE     |                |                  |                |
-|22  |IfcSlab    |FLOOR         |59,62    |                 |                      |        |FALSE     |                |                  |                |
-|23  |IfcSlab    |FLOOR         |60,62    |                 |                      |        |FALSE     |                |                  |                |
-|24  |IfcSlab    |FLOOR         |55,62    |                 |                      |        |FALSE     |                |                  |                |
-|25  |IfcSlab    |FLOOR         |56,63    |                 |                      |        |FALSE     |                |                  |                |
-|26  |IfcSlab    |FLOOR         |56,46    |                 |                      |        |FALSE     |                |                  |                |
-|27  |IfcSlab    |              |48,62    |                 |                      |        |FALSE     |                |                  |                |
-|28  |IfcSlab    |FLOOR         |49,62    |                 |                      |        |FALSE     |                |                  |                |
-|29  |IfcSlab    |FLOOR         |50,57    |                 |                      |        |FALSE     |                |                  |                |
-|30  |IfcSlab    |ROOF          |46,55    |                 |                      |        |TRUE      |                |N                 |                |
-|31  |IfcSlab    |ROOF          |46,52    |                 |                      |        |TRUE      |                |N                 |                |
-|32  |IfcSlab    |FLOOR         |48,53    |                 |                      |        |FALSE     |                |                  |                |
-|33  |IfcSlab    |FLOOR         |47,58    |                 |                      |        |FALSE     |                |                  |                |
-|34  |IfcSlab    |FLOOR         |50,63    |                 |                      |        |FALSE     |                |                  |                |
-|35  |IfcSlab    |FLOOR         |47,65    |                 |                      |        |FALSE     |                |                  |                |
-|36  |IfcSlab    |FLOOR         |47,51    |                 |                      |        |FALSE     |                |                  |                |
-|37  |IfcSlab    |FLOOR         |61,58    |                 |                      |        |FALSE     |                |                  |                |
-|38  |IfcSlab    |FLOOR         |58,64    |                 |                      |        |FALSE     |                |                  |                |
-|39  |IfcSlab    |FLOOR         |58,65    |                 |                      |        |FALSE     |                |                  |                |
-|40  |IfcSlab    |FLOOR         |52,57    |                 |                      |        |TRUE      |                |                  |                |
-|41  |IfcSlab    |ROOF          |46,62    |                 |                      |        |TRUE      |                |NE                |                |
-|42  |IfcDoor    |              |1        |                 |                      |        |TRUE      |                |N                 |                |
-|43  |IfcSlab    |ROOF          |46       |                 |                      |        |TRUE      |                |N                 |                |
-|44  |IfcRoof    |              |47       |                 |                      |        |TRUE      |                |N                 |                |
-|45  |IfcSpace   |              |70       |                 |                      |        |          |Wartungsarbeiten|                  |7               |
-|46  |IfcSpace   |              |66       |                 |                      |        |          |Terrasse        |                  |6               |
-|47  |IfcSpace   |              |66       |                 |                      |        |          |Wohnen          |                  |6.5             |
-|48  |IfcSpace   |              |66       |                 |                      |        |          |Wohnen          |                  |6.5             |
-|49  |IfcSpace   |              |66       |                 |                      |        |          |Bad             |                  |6.5             |
-|50  |IfcSpace   |              |66       |                 |                      |        |          |Schlafen        |                  |6.5             |
-|51  |IfcSpace   |              |71       |                 |                      |        |          |Treppenhaus     |                  |6.4             |
-|52  |IfcSpace   |              |67       |                 |                      |        |          |Wohnen          |                  |3.5             |
-|53  |IfcSpace   |              |67       |                 |                      |        |          |Bad             |                  |3.5             |
-|54  |IfcSpace   |              |67       |                 |                      |        |          |Terrasse        |                  |3.5             |
-|55  |IfcSpace   |              |67       |                 |                      |        |          |Schlafen        |                  |3.5             |
-|56  |IfcSpace   |              |68       |                 |                      |        |          |Tiefgarage      |                  |-3              |
-|57  |IfcSpace   |              |69       |                 |                      |        |          |Einfahrt        |                  |-3              |
-|58  |IfcSpace   |              |68       |                 |                      |        |          |Gewerbe         |                  |-3              |
-|59  |IfcSpace   |              |68       |                 |                      |        |          |Keller          |                  |-3              |
-|60  |IfcSpace   |              |68       |                 |                      |        |          |Technik         |                  |-3              |
-|61  |IfcSpace   |              |68       |                 |                      |        |          |Waschraum       |                  |-6              |
-|62  |IfcSpace   |              |69       |                 |                      |        |          |Tiefgarage      |                  |-6              |
-|63  |IfcSpace   |              |69       |                 |                      |        |          |Gewerbe         |                  |-6              |
-|64  |IfcSpace   |              |69       |                 |                      |        |          |Keller          |                  |-6              |
-|65  |IfcSpace   |              |69       |                 |                      |        |          |Technik         |                  |-6              |
-|66  |IfcZone    |              |72       |Nutzungseinheit_1|Erhoehte Anforderungen|new     |          |                |                  |                |
-|67  |IfcZone    |              |72       |Nutzungseinheit_2|Erhoehte Anforderungen|new     |          |                |                  |                |
-|68  |IfcZone    |              |72       |Nutzungseinheit_3|Erhoehte Anforderungen|new     |          |                |                  |                |
-|69  |IfcZone    |              |72       |Nutzungseinheit_4|Erhoehte Anforderungen|new     |          |                |                  |                |
-|70  |IfcZone    |              |72       |Dach             |Erhoehte Anforderungen|new     |          |                |                  |                |
-|71  |IfcZone    |              |72       |Fluchtweg_1      |Minimale Anforderungen|new     |          |                |                  |                |
-|72  |IfcBuilding|              |         |Bauprojekt       |                      |new     |          |                |                  |                |
-|73  |IfcBuilding|              |         |Nachbargebäude   |                      |existing|          |Wohnen          |                  |                |
+```json
+{
+    "id": 2,
+    "parentIds": 1,
+    "isExternal": false,
+    "celestialDirection": "N"
+}
+```
+
+### Slab
+| Key                | Type                                               | Description                                                                                                                                            |
+|--------------------|----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| id                 | string                                             | IfcGloballyUniqueId                                                                                                                                    |
+| parendIds          | string[]                                           | The ID of the parent element (IfcRelation/ IfcRelToGroup)                                                                                              |
+| isExternal         | boolean                                            | Indication whether the element is designed for use in the exterior or not. If `true` it is an external component and faces the outside of the building |
+| celestialDirection | [string: CelestrialDirection](#celestialdirection) |                                                                                                                                                        |
+| predefinedType     | [string: PredefinedType](#predefinedtype)          |                                                                                                                                                        |
+
+#### Example
+```json
+{
+    "id": 2,
+    "parentIds": 1,
+    "isExternal": false,
+    "celestialDirection": "N",
+    "predefinedType": "FLOOR"
+}
+```
+
+### Door
+| Key                | Type                                                | Description                                                                                                                                            |
+|--------------------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| id                 | string                                              | IfcGloballyUniqueId                                                                                                                                    |
+| parendIds          | string[]                                            | The ID of the parent element (IfcRelation/ IfcRelToGroup)                                                                                              |
+| isExternal         | boolean                                             | Indication whether the element is designed for use in the exterior or not. If `true` it is an external component and faces the outside of the building |
+| celestialDirection | [string: CelestrialDirection](#celestialdirection)  |                                                                                                                                                        |
+
+#### Example
+```json
+{
+    "id": 2,
+    "parentIds": 1,
+    "isExternal": false,
+    "celestialDirection": "N"
+}
+```
+
+### Roof
+| Key                | Type                                                | Description                                                                                                                                            |
+|--------------------|-----------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| id                 | string                                              | IfcGloballyUniqueId                                                                                                                                    |
+| parendIds          | string[]                                            | The ID of the parent element (IfcRelation/ IfcRelToGroup)                                                                                              |
+| isExternal         | boolean                                             | Indication whether the element is designed for use in the exterior or not. If `true` it is an external component and faces the outside of the building |
+| celestialDirection | [string: CelestrialDirection](#celestialdirection)  |                                                                                                                                                        |
+
+#### Example
+```json
+{
+    "id": 2,
+    "parentIds": 1,
+    "isExternal": false,
+    "celestialDirection": "N"
+}
+```
+
+### FlatRoof
+| Key                | Type                                                   | Description                                                                                                                                            |
+|--------------------|--------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
+| id                 | string                                                 | IfcGloballyUniqueId                                                                                                                                    |
+| parendIds          | string[]                                               | The ID of the parent element (IfcRelation/ IfcRelToGroup)                                                                                              |
+| isExternal         | boolean                                                | Indication whether the element is designed for use in the exterior or not. If `true` it is an external component and faces the outside of the building |
+| celestialDirection | [string: CelestrialDirection](#celestialdirection)     |                                                                                                                                                        |
+
+#### Example
+```json
+{
+    "id": 2,
+    "parentIds": 1,
+    "isExternal": false,
+    "celestialDirection": "N"
+}
+```
+
+### NeighbourBuilding
+| Key               | Type                                     | Description                                               |
+|-------------------|------------------------------------------|-----------------------------------------------------------|
+| id                | string                                   | IfcGloballyUniqueId                                       |
+| parendIds         | string[]                                 | The ID of the parent element (IfcRelation/ IfcRelToGroup) |
+| occupancyType     | [string: OccupancyType](#occupancytype)  |                                                           |
+
+#### Example
+```json
+{
+    "id": 2,
+    "parentIds": 1,
+    "occupancyType": "Werkstatt"
+}
+```
+
+### Space
+| Key               | Type                                    | Description                                               |
+|-------------------|-----------------------------------------|-----------------------------------------------------------|
+| id                | string                                  | IfcGloballyUniqueId                                       |
+| parendIds         | string[]                                | The ID of the parent element (IfcRelation/ IfcRelToGroup) |
+| occupancyType     | [string: OccupancyType](#occupancytype) |                                                           |
+| centerOfGravityZ  | number                                  | Center of gravity of the room volume [m]                  |
+
+#### Example
+```json
+{
+    "id": 2,
+    "parentIds": 1,
+    "occupancyType": "N",
+    "centerOfGravityZ": 15.3
+}
+```
+
+### Building
+| Key                  | Type                                      | Description                                                 |
+|----------------------|-------------------------------------------|-------------------------------------------------------------|
+| id                   | string                                    | IfcGloballyUniqueId                                         |
+| parendIds            | string[]                                  | The ID of the parent element (IfcRelation/ IfcRelToGroup)   |
+| operatingState       | [string: OperatingState](#operatingstate) |                                                             |
+
+#### Example
+```json
+{
+    "id": 2,
+    "parentIds": 1,
+    "operatingState": "N"
+}
+```
+
+### Zone
+| Key                 | Type                                                | Description                                                 |
+|---------------------|-----------------------------------------------------|-------------------------------------------------------------|
+| id                  | string                                              | IfcGloballyUniqueId                                         |
+| parendIds           | string[]                                            | The ID of the parent element (IfcRelation/ IfcRelToGroup)   |
+| operatingState      | [string: OperatingState](#operatingstate)           |                                                             |
+| name                | string                                              |                                                             |
+| acousticRatingLevel | [string: AcousticRatingLevel](#acousticratinglevel) |                                                             |
+
+#### Example
+```json
+{
+    "id": 2,
+    "parentIds": 1,
+    "operatingState": "new",
+    "acousticRatingLevel": "Mindestanforderungen"
+}
+```
 
 ### External-Acoustic-Ratings
 
@@ -192,9 +985,9 @@ console.log(calculator.calculate())
 ```
 
 ### Noise-Sensitivity-Map
-| Key                   |  Type   | Values                                     |
-|-----------------------|---------|--------------------------------------------|
-| string: OccupancyType | int    | null = None, 1 = Low, 2 = Medium, 3 = High |
+| Key                                     |  Type   | Values                                     |
+|-----------------------------------------|---------|--------------------------------------------|
+| [string: OccupancyType](#occupancytype) | int    | null = None, 1 = Low, 2 = Medium, 3 = High |
 
 #### Example
 ```json
@@ -209,7 +1002,7 @@ console.log(calculator.calculate())
 ### Airborne-Noise-Exposure-Map
 | Key                   |  Type   | Values                                         |
 |-----------------------|---------|------------------------------------------------|
-| string: OccupancyType | int    | 1 = Low, 2 = Moderate, 3 = High, 4 = Very High |
+| [string: OccupancyType](#occupancytype) | int    | 1 = Low, 2 = Moderate, 3 = High, 4 = Very High |
 
 #### Example
 ```json
@@ -224,7 +1017,7 @@ console.log(calculator.calculate())
 ### Airborne-Noise-Exposure-Map 
 | Key                   |  Type   | Values                                         |
 |-----------------------|---------|------------------------------------------------|
-| string: OccupancyType | int    | 1 = Low, 2 = Moderate, 3 = High, 4 = Very High |
+| [string: OccupancyType](#occupancytype) | int    | 1 = Low, 2 = Moderate, 3 = High, 4 = Very High |
 
 #### Example
 ```json
@@ -239,7 +1032,7 @@ console.log(calculator.calculate())
 ### Spectrum-Adjustment-Type-Map
 | Key                   | Type                           | Values                          |
 |-----------------------|--------------------------------|---------------------------------|
-| string: OccupancyType | string: SpectrumAdjustmentType | c, ctr |
+| [string: OccupancyType](#occupancytype) | string: SpectrumAdjustmentType | c, ctr |
 
 #### Example
 ```json
@@ -248,6 +1041,81 @@ console.log(calculator.calculate())
     "Werkstatt": "ctr"
 }
 ```
+
+## Types
+### CelestialDirection
+The celestial direction.
+
+| Value | Description |
+|-------|-------------|
+| null  |             |
+| N     | North       |
+| NE    | North East  |
+| E     | East        |
+| SE    | South East  |
+| S     | South       |
+| SW    | South West  |
+| W     | West        |
+| NW    | North West  |
+
+### PredefinedType
+The predefined-type based on IFC.
+
+| Value        | Description |
+|--------------|-------------|
+| FLOOR        | North       |
+| BASESLAB     | North East  |
+| ROOF         | East        |
+
+### OccupancyType
+The occupancy-type for this object according to SIA 181.
+
+| Value         | Description |
+|---------------|-------------|
+| Werkstatt     |             |
+| Empfang       |             |
+| Warteraum     |             |
+| Grossraumbüro |             | 
+| Kantine       |             | 
+| Restaurant    |             | 
+| Bad           |             | 
+| WC            |             |
+| Verkauf       |             | 
+| Labor         |             | 
+| Korridor      |             | 
+| Wohnen        |             | 
+| Schlafen      |             | 
+| Studio        |             | 
+| Schulzimmer   |             |
+| Wohnküche     |             | 
+| Büroraum      |             | 
+| Hotelzimmer   |             | 
+| Spitalzimmer  |             | 
+| Ruheräume     |             | 
+| Therapieraum  |             | 
+| Lesezimmer    |             |
+| Studierzimmer |             | 
+| Balkon        |             | 
+| Attika        |             | 
+| Terrasse      |             | 
+
+### OperatingState
+Status of the element, predominately used in renovation or retrofitting projects.
+
+| Value     | Description                                                              |
+|-----------|--------------------------------------------------------------------------|
+| new       | element designed as new addition                                         |
+| temporary | element will exists only temporary (like a temporary support structure)  |
+| existing  | element exists and remains                                               |
+| demolish  | element existed but is to be demolished                                  |
+
+### AcousticRatingLevel
+The AcousticRatingLevelRequirement for a Zone
+
+| Value                   | Description |
+|-------------------------|-------------|
+| Mindestanforderungen    |             |
+| Erhoehte Anforderungen  |             |
 
 
 ## Contributing
