@@ -36,10 +36,10 @@ class AcousticRatingCalculator {
   constructor(
     items: Component[],
     externalAcousticRatings: ExternalAcousticRatingCollection,
-    additionalNoiseSensitivityMap: NoiseSensitivityMap,
-    additionalAirborneNoiseExposureMap: NoiseExposureMap,
-    additionalFootstepNoiseExposureMap: NoiseExposureMap,
-    additionalSpectrumAdjustmentTypeMap: SpectrumAdjustmentTypeMap,
+    additionalNoiseSensitivityMap?: NoiseSensitivityMap,
+    additionalAirborneNoiseExposureMap?: NoiseExposureMap,
+    additionalFootstepNoiseExposureMap?: NoiseExposureMap,
+    additionalSpectrumAdjustmentTypeMap?: SpectrumAdjustmentTypeMap,
   ) {
     this.items = items
     this.externalAcousticRatings = externalAcousticRatings
