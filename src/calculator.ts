@@ -1,10 +1,12 @@
 import { lowerCase } from 'lodash'
-import { NOISE_SENSITIVITY_NONE, NoiseSensitivityUtil } from './noise-sensitivity'
+import { NOISE_SENSITIVITY_NONE, NoiseSensitivityMap, NoiseSensitivityUtil } from './noise-sensitivity'
 import {
+  NoiseExposureMap,
   NoiseExposureUtil,
   SPECTRUM_ADJUSTMENT_TYPE_C,
   SPECTRUM_ADJUSTMENT_TYPE_CTR,
   SpectrumAdjustmentType,
+  SpectrumAdjustmentTypeMap,
 } from './noise-exposure'
 import { AirborneAcousticRatingUtil } from './airborn-acoustic-rating'
 import { FootstepAcousticRatingUtil } from './footstep-acoustic-rating'
@@ -26,14 +28,29 @@ class OutputItem {
 class AcousticRatingCalculator {
   items: Component[]
   externalAcousticRatings: ExternalAcousticRatingCollection
-  noiseSensitivityUtil = new NoiseSensitivityUtil()
-  noiseExposureUtil = new NoiseExposureUtil()
-  airborneAcousticRatingUtil = new AirborneAcousticRatingUtil()
-  footstepAcousticRatingUtil = new FootstepAcousticRatingUtil()
+  noiseSensitivityUtil: NoiseSensitivityUtil
+  noiseExposureUtil: NoiseExposureUtil
+  airborneAcousticRatingUtil: AirborneAcousticRatingUtil
+  footstepAcousticRatingUtil: FootstepAcousticRatingUtil
 
-  constructor(items: Component[], externalAcousticRatings: ExternalAcousticRatingCollection) {
+  constructor(
+    items: Component[],
+    externalAcousticRatings: ExternalAcousticRatingCollection,
+    additionalNoiseSensitivityMap: NoiseSensitivityMap,
+    additionalAirborneNoiseExposureMap: NoiseExposureMap,
+    additionalFootstepNoiseExposureMap: NoiseExposureMap,
+    additionalSpectrumAdjustmentTypeMap: SpectrumAdjustmentTypeMap,
+  ) {
     this.items = items
     this.externalAcousticRatings = externalAcousticRatings
+    this.noiseSensitivityUtil = new NoiseSensitivityUtil(additionalNoiseSensitivityMap)
+    this.noiseExposureUtil = new NoiseExposureUtil(
+      additionalAirborneNoiseExposureMap,
+      additionalFootstepNoiseExposureMap,
+      additionalSpectrumAdjustmentTypeMap,
+    )
+    this.airborneAcousticRatingUtil = new AirborneAcousticRatingUtil(this.noiseExposureUtil)
+    this.footstepAcousticRatingUtil = new FootstepAcousticRatingUtil(this.noiseExposureUtil)
   }
 
   public calculate(): OutputItem[] {

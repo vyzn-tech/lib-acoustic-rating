@@ -41,7 +41,11 @@ const MAP = {
 }
 
 class FootstepAcousticRatingUtil {
-  noiseExposureUtil = new NoiseExposureUtil()
+  noiseExposureUtil: NoiseExposureUtil
+
+  constructor(noiseExposureUtil: NoiseExposureUtil) {
+    this.noiseExposureUtil = noiseExposureUtil
+  }
 
   public getFootstepAcousticRating(spaces: Space[]): AcousticRatingRequirement {
     if (spaces.length != 2) {

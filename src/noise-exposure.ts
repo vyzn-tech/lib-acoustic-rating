@@ -116,20 +116,6 @@ const SPECTRUM_ADJUSTMENT_TYPE_MAP_SIA181_2020: SpectrumAdjustmentTypeMap = {
   Sporthalle: SPECTRUM_ADJUSTMENT_TYPE_C,
 }
 
-const SPECTRUM_ADJUSTMENT_TYPE_MAP_SEESTRASSE: SpectrumAdjustmentTypeMap = {
-  Keller: SPECTRUM_ADJUSTMENT_TYPE_C,
-  Wohnen: SPECTRUM_ADJUSTMENT_TYPE_C,
-  Schlafen: SPECTRUM_ADJUSTMENT_TYPE_C,
-  Bad: SPECTRUM_ADJUSTMENT_TYPE_C,
-  Tiefgarage: SPECTRUM_ADJUSTMENT_TYPE_CTR,
-  Einfahrt: SPECTRUM_ADJUSTMENT_TYPE_CTR,
-  Terrasse: SPECTRUM_ADJUSTMENT_TYPE_C,
-  Treppenhaus: SPECTRUM_ADJUSTMENT_TYPE_C,
-  Waschraum: SPECTRUM_ADJUSTMENT_TYPE_CTR,
-  Technik: SPECTRUM_ADJUSTMENT_TYPE_C,
-  Gewerbe: SPECTRUM_ADJUSTMENT_TYPE_CTR,
-}
-
 const NOISE_EXPOSURE_MAP_SIA181_2006_AIRBORNE: NoiseExposureMap = {
   Konferenzraum: NOISE_EXPOSURE_MODERATE,
   Versammlungsraum: NOISE_EXPOSURE_HIGH,
@@ -172,45 +158,32 @@ const NOISE_EXPOSURE_MAP_SIA181_2006_FOOTSTEP: NoiseExposureMap = {
   Versammlungsraum: NOISE_EXPOSURE_HIGH,
 }
 
-const NOISE_EXPOSURE_MAP_SEESTRASSE_AIRBORNE: NoiseExposureMap = {
-  Keller: NOISE_EXPOSURE_LOW,
-
-  Wohnen: NOISE_EXPOSURE_MODERATE,
-  Schlafen: NOISE_EXPOSURE_MODERATE,
-  Bad: NOISE_EXPOSURE_MODERATE,
-  Tiefgarage: NOISE_EXPOSURE_MODERATE,
-  Einfahrt: NOISE_EXPOSURE_MODERATE,
-  Terrasse: NOISE_EXPOSURE_MODERATE,
-  Treppenhaus: NOISE_EXPOSURE_MODERATE,
-
-  Waschraum: NOISE_EXPOSURE_HIGH,
-  Technik: NOISE_EXPOSURE_HIGH,
-
-  Gewerbe: NOISE_EXPOSURE_VERY_HIGH,
-}
-
-const NOISE_EXPOSURE_MAP_SEESTRASSE_FOOTSTEP: NoiseExposureMap = {
-  Keller: NOISE_EXPOSURE_LOW,
-
-  Wohnen: NOISE_EXPOSURE_MODERATE,
-  Schlafen: NOISE_EXPOSURE_MODERATE,
-  Bad: NOISE_EXPOSURE_MODERATE,
-  Tiefgarage: NOISE_EXPOSURE_MODERATE,
-  Einfahrt: NOISE_EXPOSURE_MODERATE,
-  Treppenhaus: NOISE_EXPOSURE_MODERATE,
-  Terrasse: NOISE_EXPOSURE_MODERATE,
-
-  Waschraum: NOISE_EXPOSURE_VERY_HIGH,
-  Technik: NOISE_EXPOSURE_LOW,
-  Gewerbe: NOISE_EXPOSURE_HIGH,
-}
-
 class NoiseExposureUtil {
+  additionalAirborneNoiseExposureMap: NoiseExposureMap = {}
+  additionalFootstepNoiseExposureMap: NoiseExposureMap = {}
+  additionalSpectrumAdjustmentTypeMap: SpectrumAdjustmentTypeMap = {}
+
+  constructor(
+    additionalAirborneNoiseExposureMap?: NoiseExposureMap,
+    additionalFootstepNoiseExposureMap?: NoiseExposureMap,
+    additionalSpectrumAdjustmentTypeMap?: SpectrumAdjustmentTypeMap,
+  ) {
+    if (additionalAirborneNoiseExposureMap) {
+      this.additionalAirborneNoiseExposureMap = additionalAirborneNoiseExposureMap
+    }
+    if (additionalFootstepNoiseExposureMap) {
+      this.additionalFootstepNoiseExposureMap = additionalFootstepNoiseExposureMap
+    }
+    if (additionalSpectrumAdjustmentTypeMap) {
+      this.additionalSpectrumAdjustmentTypeMap = additionalSpectrumAdjustmentTypeMap
+    }
+  }
+
   getAirborneNoiseExposure(occupancy: string): NoiseExposure {
     const map = {
       ...NOISE_EXPOSURE_MAP_SIA181_2006_AIRBORNE,
       ...NOISE_EXPOSURE_MAP_SIA181_2020_AIRBORNE,
-      ...NOISE_EXPOSURE_MAP_SEESTRASSE_AIRBORNE,
+      ...this.additionalAirborneNoiseExposureMap,
     }
 
     for (const [key, value] of Object.entries(map)) {
@@ -224,7 +197,7 @@ class NoiseExposureUtil {
     const map = {
       ...NOISE_EXPOSURE_MAP_SIA181_2006_FOOTSTEP,
       ...NOISE_EXPOSURE_MAP_SIA181_2020_FOOTSTEP,
-      ...NOISE_EXPOSURE_MAP_SEESTRASSE_FOOTSTEP,
+      ...this.additionalFootstepNoiseExposureMap,
     }
 
     for (const [key, value] of Object.entries(map)) {
@@ -237,7 +210,7 @@ class NoiseExposureUtil {
   getSpectrumAdjustmentType(occupancy: string): SpectrumAdjustmentType {
     const map = {
       ...SPECTRUM_ADJUSTMENT_TYPE_MAP_SIA181_2020,
-      ...SPECTRUM_ADJUSTMENT_TYPE_MAP_SEESTRASSE,
+      ...this.additionalSpectrumAdjustmentTypeMap,
     }
 
     for (const [key, value] of Object.entries(map)) {
@@ -258,4 +231,6 @@ export {
   NoiseExposure,
   NoiseExposureUtil,
   SpectrumAdjustmentType,
+  SpectrumAdjustmentTypeMap,
+  NoiseExposureMap,
 }
